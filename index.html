@@ -8,384 +8,856 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f7f9;
-        }
-        /* Custom scrollbar for better visual appeal */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #e0e0e0; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
-
-        /* Ensure the active tab indicator color is correctly set */
-        .tab-button.active {
-            border-bottom: 3px solid #10b981;
-            color: #10b981 !important;
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
         }
         
-        /* Calendar cell styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
         .calendar-cell {
             padding: 8px;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             text-align: center;
             font-weight: 500;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
             min-height: 50px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        .all-available { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-        .partial-available { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-        .none-available { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .past-day { background-color: #e5e7eb; color: #9ca3af; cursor: default; }
+        
+        .all-available { 
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+            color: #065f46; 
+            border: 1px solid #a7f3d0; 
+        }
+        .partial-available { 
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+            color: #b45309; 
+            border: 1px solid #fde68a; 
+        }
+        .none-available { 
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); 
+            color: #991b1b; 
+            border: 1px solid #fecaca; 
+        }
+        .past-day { 
+            background: #f1f5f9; 
+            color: #94a3b8; 
+            cursor: default; 
+        }
         .selected-date { 
-            background-color: #3b82f6 !important; 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important; 
             color: white !important;
-            border: 2px solid #1d4ed8 !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+        
+        .property-card {
+            transition: all 0.3s ease;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .property-card.selected {
+            box-shadow: 0 0 0 3px var(--primary), 0 12px 24px rgba(79, 70, 229, 0.2);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #f97316 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #22c55e 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .section-header {
+            position: relative;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 2px;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { 
+            width: 8px; 
+        }
+        ::-webkit-scrollbar-track { 
+            background: #f1f5f9; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); 
+            border-radius: 4px; 
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: var(--primary-dark); 
+        }
+        
+        /* Animation for tabs */
+        .tab-content {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-available {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-booked {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        /* Form styling */
+        .form-input {
+            border: 1px solid var(--gray-light);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Stats cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Search highlight */
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        /* Quick actions */
+        .quick-action-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        /* User role badges */
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .role-admin {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .role-staff {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        /* User card */
+        .user-card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Check-in card styling */
+        .checkin-card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .checkin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .checkin-today {
+            border-left: 4px solid #10b981;
+        }
+        
+        .checkin-future {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .checkin-past {
+            border-left: 4px solid #6b7280;
         }
     </style>
 </head>
 <body class="min-h-screen antialiased">
-
     <div id="app" class="max-w-7xl mx-auto p-4 md:p-8">
-        <header class="mb-8">
-            <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight flex items-center">
-                <i class="fas fa-home text-indigo-500 mr-3"></i> Aikya Property Manager
-            </h1>
-            <p class="text-gray-500 mt-1">Property booking and management system</p>
+        <!-- Header -->
+        <header class="mb-12">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 flex items-center">
+                        <div class="gradient-bg p-3 rounded-2xl mr-4 shadow-lg">
+                            <i class="fas fa-home text-white text-2xl"></i>
+                        </div>
+                        <span class="gradient-text">Aikya</span> Property Manager
+                    </h1>
+                    <p class="text-gray-600 mt-2 text-lg">Streamlined property booking and management system</p>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="flex gap-4">
+                    <div class="stat-card p-4 min-w-[140px]">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-blue-50 text-blue-500 mr-3">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-900" id="property-count">0</p>
+                                <p class="text-sm text-gray-500">Properties</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card p-4 min-w-[140px]">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-green-50 text-green-500 mr-3">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-900" id="booking-count">0</p>
+                                <p class="text-sm text-gray-500">Bookings</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card p-4 min-w-[140px]">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-purple-50 text-purple-500 mr-3">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-900" id="today-checkin-count">0</p>
+                                <p class="text-sm text-gray-500">Today's Check-ins</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- Navigation Tabs -->
-        <div class="border-b border-gray-200 sticky top-0 bg-white z-10">
-            <nav class="-mb-px flex space-x-8" id="nav-tabs">
-                <button data-tab="booking" class="tab-button py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 active transition duration-150 ease-in-out">
-                    <i class="fas fa-calendar-alt mr-2"></i>Booking (Entry/Cancel)
+        <div class="glass-card rounded-2xl p-2 mb-8 sticky top-4 z-10">
+            <nav class="flex flex-wrap gap-2" id="nav-tabs">
+                <button data-tab="checkins" class="tab-button py-3 px-5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center active">
+                    <i class="fas fa-calendar-day mr-2"></i>Today's Check-ins
                 </button>
-                <button data-tab="availability" class="tab-button py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out">
+                <button data-tab="booking" class="tab-button py-3 px-5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>Booking Management
+                </button>
+                <button data-tab="availability" class="tab-button py-3 px-5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center">
                     <i class="fas fa-calendar-check mr-2"></i>Availability Calendar
                 </button>
-                <button data-tab="reports" class="tab-button py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out">
-                    <i class="fas fa-chart-line mr-2"></i>Bookings & Reports
+                <button data-tab="reports" class="tab-button py-3 px-5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>Reports & Analytics
                 </button>
-                <button data-tab="properties" class="tab-button py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out">
-                    <i class="fas fa-list-ul mr-2"></i>Properties Management
+                <button data-tab="properties" class="tab-button py-3 px-5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center">
+                    <i class="fas fa-list-ul mr-2"></i>Properties
                 </button>
-                <button data-tab="admin" class="tab-button py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out">
-                    <i class="fas fa-user-shield mr-2"></i>Access & Roles
+                <button data-tab="admin" class="tab-button py-3 px-5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center">
+                    <i class="fas fa-user-shield mr-2"></i>Admin Access
                 </button>
             </nav>
         </div>
 
         <!-- Tab Content Containers -->
-        <div class="mt-8 space-y-8">
+        <div class="space-y-8">
+            
+            <!-- Today's Check-ins Tab -->
+            <div id="tab-checkins" class="tab-content">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 section-header">Today's Check-ins</h2>
+                    
+                    <!-- Date Filter -->
+                    <div class="mb-8 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-purple-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-purple-100 text-purple-600 mr-3">
+                                <i class="fas fa-filter"></i>
+                            </div>
+                            Filter Check-ins by Date
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label for="checkin-filter-date" class="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                                <input type="date" id="checkin-filter-date" class="w-full p-4 form-input">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="filterCheckinsByDate()" class="btn-primary flex-1 px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center justify-center">
+                                    <i class="fas fa-search mr-2"></i> Filter Check-ins
+                                </button>
+                                <button onclick="resetCheckinFilter()" class="px-4 py-4 text-gray-600 bg-gray-200 rounded-xl hover:bg-gray-300 transition flex items-center">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="checkin-filter-info" class="mt-4 text-sm font-medium text-gray-600">
+                            <!-- Filter info will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Check-ins List -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center section-header">
+                            <div class="p-2 rounded-lg bg-green-100 text-green-600 mr-3">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            Check-ins
+                        </h3>
+                        <div id="checkin-list-container" class="space-y-4">
+                            <!-- Check-ins will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Booking Entry/Cancellation Tab -->
-            <div id="tab-booking" class="tab-content bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-3">New Booking & Cancellation</h2>
+            <div id="tab-booking" class="tab-content hidden">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 section-header">New Booking & Cancellation</h2>
 
-                <!-- Booking Form -->
-                <div class="mb-10 p-6 border border-indigo-200 rounded-lg bg-indigo-50">
-                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center"><i class="fas fa-book-open mr-2"></i> Create New Booking</h3>
-                    <form id="booking-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Booking Form -->
+                    <div class="mb-10 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-indigo-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600 mr-3">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            Create New Booking
+                        </h3>
+                        <form id="booking-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                        <!-- Guest Name -->
-                        <div>
-                            <label for="guestName" class="block text-sm font-medium text-gray-700 mb-1">Guest Name</label>
-                            <input type="text" id="guestName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
+                            <!-- Guest Name -->
+                            <div>
+                                <label for="guestName" class="block text-sm font-medium text-gray-700 mb-2">Guest Name</label>
+                                <input type="text" id="guestName" required class="w-full p-4 form-input">
+                            </div>
 
-                        <!-- Phone Number -->
-                        <div>
-                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number (Optional)</label>
-                            <input type="tel" id="phoneNumber" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
+                            <!-- Phone Number -->
+                            <div>
+                                <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-2">Phone Number (Optional)</label>
+                                <input type="tel" id="phoneNumber" class="w-full p-4 form-input">
+                            </div>
 
-                        <!-- Check-in Date -->
-                        <div>
-                            <label for="checkInDate" class="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
-                            <input type="date" id="checkInDate" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
+                            <!-- Check-in Date -->
+                            <div>
+                                <label for="checkInDate" class="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
+                                <input type="date" id="checkInDate" required class="w-full p-4 form-input">
+                            </div>
 
-                        <!-- Check-out Date -->
-                        <div>
-                            <label for="checkOutDate" class="block text-sm font-medium text-gray-700 mb-1">Check-out Date</label>
-                            <input type="date" id="checkOutDate" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
+                            <!-- Check-out Date -->
+                            <div>
+                                <label for="checkOutDate" class="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
+                                <input type="date" id="checkOutDate" required class="w-full p-4 form-input">
+                            </div>
 
-                        <!-- Property Selector (GRID VIEW) -->
-                        <div class="lg:col-span-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Available Property</label>
-                            
-                            <!-- Hidden input to store selected ID -->
-                            <input type="hidden" id="selectedPropertyId" required data-required-message="Please select a property from the grid.">
+                            <!-- Property Selector (GRID VIEW) -->
+                            <div class="lg:col-span-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Select Available Property</label>
+                                
+                                <!-- Hidden input to store selected ID -->
+                                <input type="hidden" id="selectedPropertyId" required data-required-message="Please select a property from the grid.">
 
-                            <div id="property-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Properties or Skeletal Loader will be rendered here -->
+                                <div id="property-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <!-- Properties will be rendered here -->
+                                </div>
+                                
+                                <p id="property-status" class="text-sm mt-3 font-medium text-gray-600"></p>
+                            </div>
+
+                            <!-- Source -->
+                            <div>
+                                <label for="source" class="block text-sm font-medium text-gray-700 mb-2">Source</label>
+                                <select id="source" required class="w-full p-4 form-input bg-white">
+                                    <option value="Direct">Direct</option>
+                                    <option value="Airbnb">Airbnb</option>
+                                    <option value="Booking.com">Booking.com</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Amount Paid -->
+                            <div>
+                                <label for="amountPaid" class="block text-sm font-medium text-gray-700 mb-2">Amount Paid (₹)</label>
+                                <input type="number" id="amountPaid" required min="0" step="0.01" class="w-full p-4 form-input">
                             </div>
                             
-                            <p id="property-status" class="text-xs mt-2 font-medium"></p>
-                        </div>
-                        
-                        <!-- Source -->
-                        <div>
-                            <label for="source" class="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                            <select id="source" required class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="Direct">Direct</option>
-                                <option value="Airbnb">Airbnb</option>
-                                <option value="Booking.com">Booking.com</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
+                            <!-- Submit Button -->
+                            <div class="lg:col-span-3 pt-4">
+                                <button type="submit" class="btn-primary px-8 py-4 font-semibold rounded-xl shadow-lg disabled:opacity-50 flex items-center" id="book-button">
+                                    <i class="fas fa-calendar-check mr-2"></i> Create Booking
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                        <!-- Amount Paid -->
-                        <div class="lg:col-span-1">
-                            <label for="amountPaid" class="block text-sm font-medium text-gray-700 mb-1">Amount Paid ($)</label>
-                            <input type="number" id="amountPaid" required min="0" step="0.01" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="lg:col-span-3 pt-4">
-                            <button type="submit" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50" id="book-button" disabled>
-                                <i class="fas fa-calendar-check mr-2"></i> Create Booking
+                    <!-- Cancellation Section -->
+                    <div class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-red-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-red-100 text-red-600 mr-3">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            Cancel Booking
+                        </h3>
+                        <div class="flex flex-col md:flex-row gap-4 items-end">
+                            <div class="flex-grow w-full md:w-auto">
+                                <label for="bookingIdCancel" class="block text-sm font-medium text-gray-700 mb-2">Booking ID</label>
+                                <input type="text" id="bookingIdCancel" placeholder="Enter Booking ID (e.g., BKG-12345)" class="w-full p-4 form-input">
+                            </div>
+                            <button onclick="handleCancellation()" class="btn-danger px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center">
+                                <i class="fas fa-trash-alt mr-2"></i> Confirm Cancellation
                             </button>
                         </div>
-                    </form>
-                </div>
-
-                <!-- Cancellation Section -->
-                <div class="p-6 border border-red-300 rounded-lg bg-red-50">
-                    <h3 class="text-xl font-bold text-red-700 mb-4 flex items-center"><i class="fas fa-times-circle mr-2"></i> Cancel Booking</h3>
-                    <div class="flex flex-col md:flex-row gap-4 items-end">
-                        <div class="flex-grow w-full md:w-auto">
-                            <label for="bookingIdCancel" class="block text-sm font-medium text-gray-700 mb-1">Booking ID</label>
-                            <input type="text" id="bookingIdCancel" placeholder="Enter Booking ID (e.g., BKG-12345)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500">
-                        </div>
-                        <button onclick="handleCancellation()" class="w-full md:w-auto px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg">
-                            <i class="fas fa-trash-alt mr-2"></i> Confirm Cancellation
-                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Availability Calendar Tab -->
-            <div id="tab-availability" class="tab-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-3">Property Availability Calendar</h2>
+            <div id="tab-availability" class="tab-content hidden">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 section-header">Property Availability Calendar</h2>
 
-                <!-- Calendar View -->
-                <div class="mb-8 p-6 border border-teal-300 rounded-xl bg-teal-50">
-                    <div class="flex justify-between items-center mb-4">
-                        <button onclick="changeMonth(-1)" class="px-4 py-2 text-teal-700 bg-teal-200 rounded-lg hover:bg-teal-300 transition"><i class="fas fa-arrow-left"></i> Previous</button>
-                        <h3 id="current-month-year" class="text-2xl font-bold text-teal-800"></h3>
-                        <button onclick="changeMonth(1)" class="px-4 py-2 text-teal-700 bg-teal-200 rounded-lg hover:bg-teal-300 transition">Next <i class="fas fa-arrow-right"></i></button>
-                    </div>
-
-                    <div class="grid grid-cols-7 text-center font-bold text-gray-600 mb-2">
-                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-                    </div>
-
-                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
-                        <!-- Calendar Cells will be rendered here -->
-                    </div>
-
-                    <div class="mt-6 flex justify-center space-x-4 text-sm font-medium">
-                        <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-green-100 border border-green-300 mr-2"></span> Fully Available</div>
-                        <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-yellow-100 border border-yellow-300 mr-2"></span> Partially Available</div>
-                        <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-red-100 border border-red-300 mr-2"></span> Fully Booked</div>
-                        <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-blue-100 border border-blue-300 mr-2"></span> Selected</div>
-                    </div>
-                </div>
-
-                <!-- Selected Dates Section -->
-                <div class="p-6 border border-blue-300 rounded-lg bg-blue-50 mb-8">
-                    <h3 class="text-xl font-bold text-blue-700 mb-4 flex items-center"><i class="fas fa-calendar-day mr-2"></i> Selected Dates</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
-                            <input type="text" id="calendarCheckIn" readonly class="w-full p-3 border border-blue-300 rounded-lg bg-blue-100 text-blue-700 font-medium">
+                    <!-- Calendar View -->
+                    <div class="mb-8 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 shadow-sm">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <button onclick="changeMonth(-1)" class="btn-primary px-5 py-3 rounded-xl flex items-center">
+                                <i class="fas fa-arrow-left mr-2"></i> Previous
+                            </button>
+                            <h3 id="current-month-year" class="text-2xl font-bold text-gray-800 text-center"></h3>
+                            <button onclick="changeMonth(1)" class="btn-primary px-5 py-3 rounded-xl flex items-center">
+                                Next <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Check-out Date</label>
-                            <input type="text" id="calendarCheckOut" readonly class="w-full p-3 border border-blue-300 rounded-lg bg-blue-100 text-blue-700 font-medium">
+
+                        <div class="grid grid-cols-7 text-center font-bold text-gray-600 mb-4">
+                            <span class="p-2">Sun</span><span class="p-2">Mon</span><span class="p-2">Tue</span><span class="p-2">Wed</span><span class="p-2">Thu</span><span class="p-2">Fri</span><span class="p-2">Sat</span>
+                        </div>
+
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+                            <!-- Calendar Cells will be rendered here -->
+                        </div>
+
+                        <div class="mt-8 flex flex-wrap justify-center gap-6 text-sm font-medium">
+                            <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-green-100 border border-green-300 mr-2"></span> Fully Available</div>
+                            <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-yellow-100 border border-yellow-300 mr-2"></span> Partially Available</div>
+                            <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-red-100 border border-red-300 mr-2"></span> Fully Booked</div>
+                            <div class="flex items-center"><span class="h-4 w-4 rounded-full bg-blue-100 border border-blue-300 mr-2"></span> Selected</div>
                         </div>
                     </div>
-                    <div class="mt-4 flex gap-2">
-                        <button onclick="clearCalendarSelection()" class="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
-                            <i class="fas fa-times mr-1"></i> Clear Selection
-                        </button>
-                        <button onclick="useCalendarDatesForBooking()" class="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
-                            <i class="fas fa-hand-point-right mr-1"></i> Use These Dates for Booking
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Range Check & Booking Link -->
-                <div class="p-6 border border-indigo-300 rounded-lg bg-indigo-50">
-                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center"><i class="fas fa-search-plus mr-2"></i> Check Availability Range</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div>
-                            <label for="availCheckIn" class="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
-                            <input type="date" id="availCheckIn" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    <!-- Selected Dates Section -->
+                    <div class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-sm mb-8">
+                        <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            Selected Dates
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
+                                <input type="text" id="calendarCheckIn" readonly class="w-full p-4 border border-blue-200 rounded-xl bg-blue-50 text-blue-700 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
+                                <input type="text" id="calendarCheckOut" readonly class="w-full p-4 border border-blue-200 rounded-xl bg-blue-50 text-blue-700 font-medium">
+                            </div>
                         </div>
-                        <div>
-                            <label for="availCheckOut" class="block text-sm font-medium text-gray-700 mb-1">Check-out Date</label>
-                            <input type="date" id="availCheckOut" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <button onclick="handleAvailabilityRangeCheck()" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg">
-                                <i class="fas fa-list-ol mr-2"></i> Find Available Properties
+                        <div class="mt-6 flex gap-3">
+                            <button onclick="clearCalendarSelection()" class="px-5 py-3 text-sm bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition flex items-center">
+                                <i class="fas fa-times mr-2"></i> Clear Selection
+                            </button>
+                            <button onclick="useCalendarDatesForBooking()" class="btn-primary px-5 py-3 text-sm rounded-xl flex items-center">
+                                <i class="fas fa-hand-point-right mr-2"></i> Use These Dates for Booking
                             </button>
                         </div>
                     </div>
 
-                    <!-- Available Property List for Range -->
-                    <div id="available-properties-for-range" class="mt-6 space-y-3">
-                        <p id="range-status" class="text-gray-600">Select a date range to check availability.</p>
-                        <!-- Available Properties List will be rendered here -->
+                    <!-- Range Check & Booking Link -->
+                    <div class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-indigo-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600 mr-3">
+                                <i class="fas fa-search-plus"></i>
+                            </div>
+                            Check Availability Range
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                            <div>
+                                <label for="availCheckIn" class="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
+                                <input type="date" id="availCheckIn" required class="w-full p-4 form-input">
+                            </div>
+                            <div>
+                                <label for="availCheckOut" class="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
+                                <input type="date" id="availCheckOut" required class="w-full p-4 form-input">
+                            </div>
+                            <div>
+                                <button onclick="handleAvailabilityRangeCheck()" class="btn-primary w-full px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center justify-center">
+                                    <i class="fas fa-list-ol mr-2"></i> Find Available Properties
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Available Property List for Range -->
+                        <div id="available-properties-for-range" class="mt-8 space-y-4">
+                            <p id="range-status" class="text-gray-600 text-center p-4 bg-gray-50 rounded-xl">Select a date range to check availability.</p>
+                            <!-- Available Properties List will be rendered here -->
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Bookings and Reports Tab -->
-            <div id="tab-reports" class="tab-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-3">Bookings List & External Sync</h2>
-                
-                <!-- Google Sheets Configuration -->
-                <div class="mb-8 p-6 border border-yellow-300 rounded-lg bg-yellow-50">
-                    <h3 class="text-xl font-bold text-yellow-700 mb-4 flex items-center"><i class="fas fa-file-excel mr-2"></i> Google Sheets Integration Configuration</h3>
-                    <p class="text-gray-700 mb-4">Configure the Google Sheet link for automatic booking sync.</p>
-                    <form id="sheets-config-form" class="space-y-4">
-                        <div class="flex flex-col gap-3">
-                            <input type="url" id="sheetUrl" placeholder="Enter Google Sheets API/Webhook URL" required class="p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500">
-                            <input type="text" id="sheetName" placeholder="Enter Sheet Name/Tab (e.g., 'Bookings_2024')" required class="p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500">
+            <div id="tab-reports" class="tab-content hidden">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 section-header">Bookings List & External Sync</h2>
+                    
+                    <!-- Search Section -->
+                    <div class="mb-8 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-purple-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-purple-100 text-purple-600 mr-3">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            Search Bookings
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label for="searchBookingId" class="block text-sm font-medium text-gray-700 mb-2">Booking ID</label>
+                                <input type="text" id="searchBookingId" placeholder="Enter Booking ID" class="w-full p-4 form-input">
+                            </div>
+                            <div>
+                                <label for="searchPhone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                                <input type="text" id="searchPhone" placeholder="Enter phone number" class="w-full p-4 form-input">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="handleSearch()" class="btn-primary flex-1 px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center justify-center">
+                                    <i class="fas fa-search mr-2"></i> Search
+                                </button>
+                                <button onclick="clearSearch()" class="px-4 py-4 text-gray-600 bg-gray-200 rounded-xl hover:bg-gray-300 transition flex items-center">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                        <button type="submit" class="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-xl hover:bg-yellow-700 transition duration-150 ease-in-out">
-                            <i class="fas fa-save mr-2"></i> Save Configuration & Enable Auto-Sync
-                        </button>
-                    </form>
-                    <div class="mt-4 p-3 rounded-lg flex items-center" id="sheet-status">
-                        <!-- Status text will be rendered here -->
+                        <div id="search-results-info" class="mt-4 text-sm font-medium text-gray-600 hidden">
+                            <!-- Search results info will appear here -->
+                        </div>
                     </div>
-                </div>
 
-                <!-- Booking List -->
-                <div class="mt-8">
-                    <h3 class="text-2xl font-semibold text-gray-700 mb-4 flex items-center"><i class="fas fa-receipt mr-2"></i> Current Bookings</h3>
-                    <div id="booking-list-container" class="overflow-x-auto">
-                        <!-- Bookings will be rendered here -->
+                    <!-- Google Sheets Configuration -->
+                    <div class="mb-10 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-yellow-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-yellow-100 text-yellow-600 mr-3">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            Google Sheets Integration Configuration
+                        </h3>
+                        <p class="text-gray-700 mb-6">Configure the Google Sheet link for automatic booking sync.</p>
+                        <form id="sheets-config-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <input type="url" id="sheetUrl" placeholder="Enter Google Sheets API/Webhook URL" required class="p-4 form-input">
+                                <input type="text" id="sheetName" placeholder="Enter Sheet Name/Tab (e.g., 'Bookings_2024')" required class="p-4 form-input">
+                            </div>
+                            <button type="submit" class="btn-primary px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center">
+                                <i class="fas fa-save mr-2"></i> Save Configuration & Enable Auto-Sync
+                            </button>
+                        </form>
+                        <div class="mt-6 p-4 rounded-xl flex items-center" id="sheet-status">
+                            <!-- Status text will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Booking List -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center section-header">
+                            <div class="p-2 rounded-lg bg-gray-100 text-gray-600 mr-3">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            Current Bookings
+                        </h3>
+                        <div id="booking-list-container" class="overflow-x-auto rounded-2xl shadow-sm">
+                            <!-- Bookings will be rendered here -->
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Properties Management Tab -->
-            <div id="tab-properties" class="tab-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-3">Properties Management</h2>
+            <div id="tab-properties" class="tab-content hidden">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 section-header">Properties Management</h2>
 
-                <!-- Add New Property Form -->
-                <div id="add-property-section" class="mb-8 p-6 border border-green-300 rounded-lg bg-green-50">
-                    <h3 class="text-xl font-bold text-green-700 mb-4 flex items-center"><i class="fas fa-plus-circle mr-2"></i> Add New Property (Admin Only)</h3>
-                    <form id="add-property-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="propertyName" class="block text-sm font-medium text-gray-700 mb-1">Property Name</label>
-                            <input type="text" id="propertyName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
-                        </div>
-                        <div>
-                            <label for="propertyLocation" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                            <input type="text" id="propertyLocation" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
-                        </div>
-                        <div class="md:col-span-2">
-                            <button type="submit" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg">
-                                <i class="fas fa-save mr-2"></i> Save Property
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <!-- Add New Property Form -->
+                    <div id="add-property-section" class="mb-10 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 shadow-sm">
+                        <h3 class="text-xl font-bold text-green-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-green-100 text-green-600 mr-3">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            Add New Property (Admin Only)
+                        </h3>
+                        <form id="add-property-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="propertyName" class="block text-sm font-medium text-gray-700 mb-2">Property Name</label>
+                                <input type="text" id="propertyName" required class="w-full p-4 form-input">
+                            </div>
+                            <div>
+                                <label for="propertyLocation" class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                <input type="text" id="propertyLocation" required class="w-full p-4 form-input">
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="btn-success px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Save Property
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                <!-- Property List -->
-                <div>
-                    <h3 class="text-2xl font-semibold text-gray-700 mb-4 flex items-center"><i class="fas fa-building mr-2"></i> Current Properties</h3>
-                    <div id="property-list-container">
-                        <!-- Properties will be rendered here -->
+                    <!-- Property List -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center section-header">
+                            <div class="p-2 rounded-lg bg-gray-100 text-gray-600 mr-3">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            Current Properties
+                        </h3>
+                        <div id="property-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Properties will be rendered here -->
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Admin Access Tab -->
-            <div id="tab-admin" class="tab-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-3">User Access & Role Management</h2>
+            <div id="tab-admin" class="tab-content hidden">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 section-header">User Access & Role Management</h2>
 
-                <!-- Admin Login -->
-                <div id="login-container" class="max-w-md mx-auto p-8 border border-gray-300 rounded-xl shadow-md transition duration-300 ease-in-out">
-                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center"><i class="fas fa-lock mr-2"></i> Admin Login</h3>
-                    <form id="admin-login-form" class="space-y-4">
-                        <div>
-                            <label for="adminUsername" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                            <input type="text" id="adminUsername" placeholder="Enter username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input type="password" id="adminPassword" placeholder="Enter password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <button type="submit" class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out">
-                            <i class="fas fa-sign-in-alt mr-2"></i> Log In
-                        </button>
-                        <p id="login-message" class="text-center text-red-500 text-sm mt-2"></p>
-                    </form>
-                </div>
-
-                <!-- Admin Dashboard (Visible after login) -->
-                <div id="admin-dashboard" class="hidden space-y-8">
-                    <p id="role-welcome-message" class="text-lg font-medium p-3 rounded-lg flex items-center"></p>
-
-                    <!-- User Management -->
-                    <div class="p-6 border border-blue-300 rounded-lg bg-blue-50">
-                        <h3 class="text-xl font-bold text-blue-700 mb-4 flex items-center"><i class="fas fa-users-cog mr-2"></i> User Access Management</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input type="text" id="newUserUsername" placeholder="New Username" class="p-3 border rounded-lg">
-                            <input type="password" id="newUserPassword" placeholder="New Password" class="p-3 border rounded-lg">
-                            <select id="newUserRole" class="p-3 border rounded-lg bg-white">
-                                <option value="Admin">Admin</option>
-                                <option value="Staff">Staff Member</option>
-                            </select>
-                        </div>
-                        <button onclick="showMessage('User Added/Credentials Set (Simulation)', 'info')" class="mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition duration-150 ease-in-out">
-                            <i class="fas fa-user-plus mr-2"></i> Add/Set User Credentials
-                        </button>
-                        <div class="mt-4 text-sm text-blue-700">
-                            <p>Default Admin: aikyaadmin / admin123</p>
-                        </div>
+                    <!-- Admin Login -->
+                    <div id="login-container" class="max-w-md mx-auto p-8 rounded-2xl glass-card border border-gray-200 shadow-lg transition duration-300 ease-in-out">
+                        <h3 class="text-xl font-bold text-gray-700 mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600 mr-3">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            Admin Login
+                        </h3>
+                        <form id="admin-login-form" class="space-y-6">
+                            <div>
+                                <label for="adminUsername" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" id="adminUsername" placeholder="Enter username" class="w-full p-4 form-input">
+                            </div>
+                            <div>
+                                <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input type="password" id="adminPassword" placeholder="Enter password" class="w-full p-4 form-input">
+                            </div>
+                            <button type="submit" class="btn-primary w-full px-4 py-4 font-semibold rounded-xl shadow-lg flex items-center justify-center">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Log In
+                            </button>
+                            <p id="login-message" class="text-center text-red-500 text-sm mt-2"></p>
+                        </form>
                     </div>
 
-                    <button onclick="logoutAdmin()" class="px-4 py-2 text-sm text-red-600 hover:text-red-800 transition duration-150 ease-in-out">
-                        <i class="fas fa-sign-out-alt mr-1"></i> Log Out
-                    </button>
+                    <!-- Admin Dashboard (Visible after login) -->
+                    <div id="admin-dashboard" class="hidden space-y-8">
+                        <div class="p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+                            <p id="role-welcome-message" class="text-lg font-medium flex items-center"></p>
+                        </div>
+
+                        <!-- User Management -->
+                        <div class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-sm">
+                            <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
+                                <div class="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                Add New User
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <input type="text" id="newUserUsername" placeholder="New Username" class="p-4 form-input">
+                                <input type="password" id="newUserPassword" placeholder="New Password" class="p-4 form-input">
+                                <select id="newUserRole" class="p-4 form-input bg-white">
+                                    <option value="Admin">Admin</option>
+                                    <option value="Staff">Staff Member</option>
+                                </select>
+                            </div>
+                            <button onclick="addNewUser()" class="btn-primary px-6 py-4 font-semibold rounded-xl shadow-lg flex items-center">
+                                <i class="fas fa-user-plus mr-2"></i> Add New User
+                            </button>
+                        </div>
+
+                        <!-- User List -->
+                        <div class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 shadow-sm">
+                            <h3 class="text-xl font-bold text-purple-700 mb-6 flex items-center">
+                                <div class="p-2 rounded-lg bg-purple-100 text-purple-600 mr-3">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                User List
+                            </h3>
+                            <div id="user-list-container" class="space-y-4">
+                                <!-- Users will be listed here -->
+                            </div>
+                        </div>
+
+                        <button onclick="logoutAdmin()" class="px-5 py-3 text-sm text-red-600 hover:text-red-800 transition duration-150 ease-in-out flex items-center">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Log Out
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Global Message Box -->
         <div id="message-box" class="fixed bottom-4 right-4 z-50 transition-transform duration-300 ease-out translate-y-full opacity-0">
-            <div class="bg-gray-800 text-white p-4 rounded-xl shadow-2xl min-w-[300px] flex items-center space-x-3">
+            <div class="glass-card p-4 rounded-xl shadow-2xl min-w-[300px] flex items-center space-x-3 border">
                 <i id="msg-icon" class="text-2xl"></i>
                 <span id="msg-text" class="font-medium"></span>
             </div>
         </div>
 
         <!-- Custom Confirmation Modal -->
-        <div id="custom-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center">
-            <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4 transform transition-all">
-                <h3 id="modal-title" class="text-xl font-bold mb-4 text-gray-800">Confirm Action</h3>
+        <div id="custom-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-card p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transform transition-all border">
+                <h3 id="modal-title" class="text-xl font-bold mb-4 text-gray-900">Confirm Action</h3>
                 <p id="modal-body" class="text-gray-600 mb-6">Are you sure you want to proceed?</p>
                 <div class="flex justify-end space-x-3">
                     <button id="modal-cancel-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cancel</button>
-                    <button id="modal-confirm-btn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">Confirm</button>
+                    <button id="modal-confirm-btn" class="btn-primary px-4 py-2 text-sm font-medium rounded-lg">Confirm</button>
                 </div>
             </div>
         </div>
@@ -399,7 +871,41 @@
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- DATE FORMATTING FUNCTIONS ---
+        // --- SECURE DEFAULT CREDENTIALS ---
+        const DEFAULT_ADMIN = {
+            username: 'aikyaadmin',
+            password: 'admin123',
+            role: 'Admin'
+        };
+
+        // --- DATA STORAGE ---
+        const STORAGE_KEY_PROPERTIES = 'property_manager_properties';
+        const STORAGE_KEY_BOOKINGS = 'property_manager_bookings';
+        const STORAGE_KEY_SHEET_CONFIG = 'property_manager_sheet_config';
+        const STORAGE_KEY_USER = 'aikya_admin_user';
+        const STORAGE_KEY_USERS = 'aikya_system_users';
+
+        let properties = [];
+        let bookings = [];
+        let sheetConfig = {};
+        let users = [];
+        let currentUserRole = null;
+        let currentSelectedPropertyId = '';
+        let currentCalendarDate = new Date();
+        currentCalendarDate.setDate(1);
+
+        // Calendar selection state
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+
+        // Search state
+        let currentSearchTerm = '';
+        let currentSearchType = '';
+
+        // Check-in filter state
+        let currentCheckinFilterDate = null;
+
+        // --- CORE UTILITY FUNCTIONS ---
         const dateToDMY = (date) => {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -414,17 +920,7 @@
 
         const getCurrentKolkataDateTime = () => {
             const now = new Date();
-            const kolkataOffset = 5.5 * 60 * 60 * 1000;
-            const kolkataTime = new Date(now.getTime() + kolkataOffset);
-            
-            const day = String(kolkataTime.getUTCDate()).padStart(2, '0');
-            const month = String(kolkataTime.getUTCMonth() + 1).padStart(2, '0');
-            const year = kolkataTime.getUTCFullYear();
-            const hours = String(kolkataTime.getUTCHours()).padStart(2, '0');
-            const minutes = String(kolkataTime.getUTCMinutes()).padStart(2, '0');
-            const seconds = String(kolkataTime.getUTCSeconds()).padStart(2, '0');
-            
-            return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} IST`;
+            return now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
         };
 
         const htmlDateToDMY = (htmlDate) => {
@@ -444,24 +940,6 @@
             const d2 = dmyToDate(date2);
             return d1.getTime() - d2.getTime();
         };
-
-        // --- DATA STORAGE ---
-        const STORAGE_KEY_PROPERTIES = 'property_manager_properties';
-        const STORAGE_KEY_BOOKINGS = 'property_manager_bookings';
-        const STORAGE_KEY_SHEET_CONFIG = 'property_manager_sheet_config';
-        const STORAGE_KEY_USER = 'aikya_admin_user';
-
-        let properties = [];
-        let bookings = [];
-        let sheetConfig = {};
-        let currentUserRole = null;
-        let currentSelectedPropertyId = '';
-        let currentCalendarDate = new Date();
-        currentCalendarDate.setDate(1);
-
-        // Calendar selection state
-        let selectedStartDate = null;
-        let selectedEndDate = null;
 
         // Helper functions
         const dateToYMD = (date) => dateToDMY(date);
@@ -536,8 +1014,247 @@
             }, 3700);
         }
 
+        // --- USER MANAGEMENT FUNCTIONS ---
+        async function loadUsers() {
+            try {
+                console.log("Loading users from Supabase...");
+                
+                // Try Supabase first
+                const { data: usersData, error: usersError } = await supabase
+                    .from('users')
+                    .select('*');
+                
+                if (!usersError && usersData) {
+                    users = usersData;
+                    console.log("Users loaded from Supabase:", users);
+                } else {
+                    console.error("Error loading users from Supabase:", usersError);
+                    // Fallback to localStorage
+                    users = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || '[]');
+                    
+                    // If no users exist, create default admin user
+                    if (users.length === 0) {
+                        const defaultAdmin = {
+                            id: 'USR-ADMIN-001',
+                            username: DEFAULT_ADMIN.username,
+                            password: DEFAULT_ADMIN.password,
+                            role: DEFAULT_ADMIN.role,
+                            created_at: new Date().toISOString(),
+                            is_active: true,
+                            is_default: true
+                        };
+                        users.push(defaultAdmin);
+                        await saveUsers();
+                    }
+                }
+            } catch (e) {
+                console.error("Supabase load failed, using localStorage", e);
+                users = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || '[]');
+            }
+        }
+
+        async function saveUsers() {
+            try {
+                console.log("Saving users to Supabase...");
+                
+                if (users.length > 0) {
+                    const { error } = await supabase.from('users').upsert(users);
+                    if (error) console.error("Error saving users:", error);
+                }
+            } catch (e) {
+                console.error("Supabase save failed, using localStorage", e);
+            }
+
+            // Always backup to localStorage
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        }
+
+        function authenticateUser(username, password) {
+            const user = users.find(u => 
+                u.username === username && 
+                u.password === password && 
+                u.is_active !== false
+            );
+            
+            if (user) {
+                return {
+                    id: user.id,
+                    username: user.username,
+                    role: user.role
+                };
+            }
+            return null;
+        }
+
+        window.addNewUser = async function() {
+            const username = document.getElementById('newUserUsername').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+
+            if (!username || !password) {
+                showMessage('Please enter both username and password.', 'error');
+                return;
+            }
+
+            // Check if username already exists
+            if (users.find(u => u.username === username)) {
+                showMessage('Username already exists. Please choose a different username.', 'error');
+                return;
+            }
+
+            const newUser = {
+                id: 'USR-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+                username: username,
+                password: password,
+                role: role,
+                created_at: new Date().toISOString(),
+                created_by: currentUserRole,
+                is_active: true,
+                is_default: false
+            };
+
+            users.push(newUser);
+            await saveUsers();
+            renderUserList();
+            
+            // Clear form
+            document.getElementById('newUserUsername').value = '';
+            document.getElementById('newUserPassword').value = '';
+            
+            showMessage(`User "${username}" added successfully as ${role}!`, 'success');
+        }
+
+        window.deleteUser = async function(userId) {
+            if (currentUserRole !== 'Admin') {
+                showMessage('Access Denied: Only Admin can delete users.', 'error');
+                return;
+            }
+
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            // Prevent deleting yourself
+            const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
+            if (currentUser && currentUser.id === userId) {
+                showMessage('You cannot delete your own account.', 'error');
+                return;
+            }
+
+            // Prevent deleting default admin
+            if (user.is_default) {
+                showMessage('Cannot delete the default administrator account.', 'error');
+                return;
+            }
+
+            showConfirmationModal(
+                'Confirm User Deletion',
+                `Are you sure you want to delete user "${user.username}"? This action cannot be undone.`,
+                async () => {
+                    try {
+                        users = users.filter(u => u.id !== userId);
+                        await saveUsers();
+                        renderUserList();
+                        showMessage(`User "${user.username}" has been deleted.`, 'success');
+                    } catch (error) {
+                        console.error('Failed to delete user:', error);
+                        showMessage('Failed to delete user.', 'error');
+                    }
+                }
+            );
+        }
+
+        window.toggleUserStatus = async function(userId) {
+            if (currentUserRole !== 'Admin') {
+                showMessage('Access Denied: Only Admin can modify user status.', 'error');
+                return;
+            }
+
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            // Prevent deactivating yourself
+            const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
+            if (currentUser && currentUser.id === userId) {
+                showMessage('You cannot deactivate your own account.', 'error');
+                return;
+            }
+
+            // Prevent deactivating default admin
+            if (user.is_default) {
+                showMessage('Cannot deactivate the default administrator account.', 'error');
+                return;
+            }
+
+            user.is_active = !user.is_active;
+            await saveUsers();
+            renderUserList();
+            
+            const status = user.is_active ? 'activated' : 'deactivated';
+            showMessage(`User "${user.username}" has been ${status}.`, 'success');
+        }
+
+        function renderUserList() {
+            const container = document.getElementById('user-list-container');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 p-4 text-center">No users found.</p>';
+                return;
+            }
+
+            const sortedUsers = [...users].sort((a, b) => {
+                // Sort by role (Admin first), then by username
+                if (a.role === 'Admin' && b.role !== 'Admin') return -1;
+                if (a.role !== 'Admin' && b.role === 'Admin') return 1;
+                return a.username.localeCompare(b.username);
+            });
+
+            container.innerHTML = sortedUsers.map(user => {
+                const roleClass = user.role === 'Admin' ? 'role-admin' : 'role-staff';
+                const statusClass = user.is_active ? 'text-green-600' : 'text-red-600';
+                const statusText = user.is_active ? 'Active' : 'Inactive';
+                const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
+                const isCurrentUser = currentUser && currentUser.id === user.id;
+                const isDefaultUser = user.is_default;
+
+                return `
+                    <div class="user-card p-4 bg-white border border-gray-200 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                ${user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <p class="font-semibold text-gray-900">${user.username}</p>
+                                    <span class="role-badge ${roleClass}">${user.role}</span>
+                                    <span class="text-xs ${statusClass}">• ${statusText}</span>
+                                    ${isCurrentUser ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Current</span>' : ''}
+                                    ${isDefaultUser ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Default</span>' : ''}
+                                </div>
+                                <p class="text-sm text-gray-500">Created: ${new Date(user.created_at).toLocaleDateString()}</p>
+                                ${user.created_by ? `<p class="text-xs text-gray-400">By: ${user.created_by}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleUserStatus('${user.id}')" 
+                                    class="px-3 py-1 text-sm rounded-lg ${user.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'} transition"
+                                    ${isCurrentUser || isDefaultUser ? 'disabled opacity-50 cursor-not-allowed' : ''}>
+                                ${user.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button onclick="deleteUser('${user.id}')" 
+                                    class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
+                                    ${isCurrentUser || isDefaultUser ? 'disabled opacity-50 cursor-not-allowed' : ''}>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // --- DATA FUNCTIONS ---
         async function loadData() {
+            await loadUsers(); // Load users first
+            
             try {
                 console.log("Loading data from Supabase...");
                 
@@ -551,6 +1268,8 @@
                     console.log("Properties loaded from Supabase:", properties);
                 } else {
                     console.error("Error loading properties from Supabase:", propertiesError);
+                    // Fallback to localStorage
+                    properties = JSON.parse(localStorage.getItem(STORAGE_KEY_PROPERTIES) || '[]');
                 }
 
                 const { data: bookingsData, error: bookingsError } = await supabase
@@ -562,6 +1281,8 @@
                     console.log("Bookings loaded from Supabase:", bookings);
                 } else {
                     console.error("Error loading bookings from Supabase:", bookingsError);
+                    // Fallback to localStorage
+                    bookings = JSON.parse(localStorage.getItem(STORAGE_KEY_BOOKINGS) || '[]');
                 }
 
                 const { data: configData, error: configError } = await supabase
@@ -575,6 +1296,8 @@
                     console.log("Config loaded from Supabase:", sheetConfig);
                 } else {
                     console.error("Error loading config from Supabase:", configError);
+                    // Fallback to localStorage
+                    sheetConfig = JSON.parse(localStorage.getItem(STORAGE_KEY_SHEET_CONFIG) || '{}');
                 }
 
             } catch (e) {
@@ -585,10 +1308,14 @@
                 sheetConfig = JSON.parse(localStorage.getItem(STORAGE_KEY_SHEET_CONFIG) || '{}');
             }
 
-            // Don't create default properties - start with empty properties
+            // Create sample properties if none exist
             if (properties.length === 0) {
-                console.log("No properties found - starting with empty properties list");
-                properties = [];
+                properties = [
+                    { id: 'PROP-001', name: 'Beach Villa', location: 'Goa' },
+                    { id: 'PROP-002', name: 'Mountain View', location: 'Manali' },
+                    { id: 'PROP-003', name: 'City Apartment', location: 'Mumbai' }
+                ];
+                await saveData();
             }
         }
 
@@ -596,7 +1323,7 @@
             try {
                 console.log("Saving data to Supabase...");
                 
-                // Save to Supabase - only upsert, deletions are handled separately
+                // Save to Supabase
                 if (properties.length > 0) {
                     const { error: propertiesError } = await supabase.from('properties').upsert(properties);
                     if (propertiesError) console.error("Error saving properties:", propertiesError);
@@ -656,6 +1383,136 @@
 
             console.log(`Property ${propertyId} is ${isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}`);
             return isAvailable;
+        }
+
+        // --- CHECK-IN FUNCTIONS ---
+        function renderCheckins() {
+            const container = document.getElementById('checkin-list-container');
+            const filterInfo = document.getElementById('checkin-filter-info');
+            
+            // Get today's date in DMY format
+            const todayDMY = dateToDMY(new Date());
+            
+            // Determine which date to filter by
+            let filterDate = currentCheckinFilterDate || todayDMY;
+            
+            // Find check-ins for the selected date
+            const checkins = bookings.filter(booking => 
+                booking.check_in_date === filterDate
+            );
+            
+            // Update filter info
+            if (currentCheckinFilterDate) {
+                filterInfo.innerHTML = `
+                    <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <span class="text-blue-700 font-medium">Showing check-ins for: <strong>${filterDate}</strong></span>
+                        <button onclick="resetCheckinFilter()" class="text-blue-800 hover:text-blue-900 text-sm underline">
+                            Show Today's Check-ins
+                        </button>
+                    </div>
+                `;
+            } else {
+                filterInfo.innerHTML = `
+                    <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <i class="fas fa-info-circle text-green-500 mr-2"></i>
+                        <span class="text-green-700 font-medium">Showing today's check-ins: <strong>${filterDate}</strong></span>
+                    </div>
+                `;
+            }
+            
+            // Update today's check-in count
+            const todayCheckins = bookings.filter(booking => 
+                booking.check_in_date === todayDMY
+            );
+            document.getElementById('today-checkin-count').textContent = todayCheckins.length;
+            
+            if (checkins.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-8 border-2 border-dashed border-gray-300 rounded-xl">
+                        <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500 font-medium">No check-ins found for ${filterDate}</p>
+                        <p class="text-gray-400 text-sm mt-2">Check-ins will appear here when guests are scheduled to arrive.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort check-ins by property name
+            const sortedCheckins = [...checkins].sort((a, b) => 
+                a.property_name.localeCompare(b.property_name)
+            );
+            
+            container.innerHTML = sortedCheckins.map(booking => {
+                const today = new Date();
+                const checkInDate = dmyToDate(booking.check_in_date);
+                const isToday = checkInDate.toDateString() === today.toDateString();
+                const isFuture = checkInDate > today;
+                
+                const cardClass = isToday ? 'checkin-today' : (isFuture ? 'checkin-future' : 'checkin-past');
+                
+                return `
+                    <div class="checkin-card p-5 bg-white border border-gray-200 ${cardClass}">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h4 class="text-lg font-bold text-gray-900">${booking.guest_name}</h4>
+                                        <p class="text-sm text-gray-500">${booking.phone_number || 'No phone provided'}</p>
+                                    </div>
+                                    <span class="text-xs font-semibold px-3 py-1 rounded-full ${isToday ? 'bg-green-100 text-green-800' : (isFuture ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800')}">
+                                        ${isToday ? 'Today' : (isFuture ? 'Future' : 'Past')}
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-600"><i class="fas fa-building text-indigo-500 mr-2"></i> ${booking.property_name}</p>
+                                        <p class="text-gray-600"><i class="fas fa-map-marker-alt text-indigo-500 mr-2"></i> ${properties.find(p => p.id === booking.property_id)?.location || 'Unknown'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600"><i class="fas fa-calendar-day text-indigo-500 mr-2"></i> Check-in: ${booking.check_in_date}</p>
+                                        <p class="text-gray-600"><i class="fas fa-calendar-check text-indigo-500 mr-2"></i> Check-out: ${booking.check_out_date}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <span class="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded">${booking.source}</span>
+                                    <span class="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded">₹${booking.amount_paid}</span>
+                                    <span class="text-xs font-medium px-2 py-1 bg-purple-100 text-purple-700 rounded">${booking.id}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col gap-2">
+                                <button onclick="copyBookingId('${booking.id}')" class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center justify-center">
+                                    <i class="fas fa-copy mr-2"></i> Copy ID
+                                </button>
+                                <button onclick="quickCancelBooking('${booking.id}')" class="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center justify-center">
+                                    <i class="fas fa-times mr-2"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.filterCheckinsByDate = function() {
+            const dateInput = document.getElementById('checkin-filter-date').value;
+            if (!dateInput) {
+                showMessage('Please select a date to filter check-ins.', 'error');
+                return;
+            }
+            
+            currentCheckinFilterDate = htmlDateToDMY(dateInput);
+            renderCheckins();
+            showMessage(`Showing check-ins for ${currentCheckinFilterDate}`, 'info');
+        }
+
+        window.resetCheckinFilter = function() {
+            currentCheckinFilterDate = null;
+            document.getElementById('checkin-filter-date').value = '';
+            renderCheckins();
+            showMessage('Showing today\'s check-ins', 'info');
         }
 
         // --- CALENDAR FUNCTIONS ---
@@ -799,14 +1656,12 @@
             
             const cards = document.querySelectorAll('#property-grid-container .property-card');
             cards.forEach(card => {
-                card.classList.remove('ring-4', 'ring-indigo-500', 'bg-indigo-100', 'shadow-xl');
-                card.classList.add('border-gray-200', 'bg-white');
+                card.classList.remove('selected');
             });
 
             const selectedCard = document.getElementById(`card-${propertyId}`);
             if (selectedCard) {
-                selectedCard.classList.add('ring-4', 'ring-indigo-500', 'bg-indigo-100', 'shadow-xl');
-                selectedCard.classList.remove('border-gray-200', 'bg-white');
+                selectedCard.classList.add('selected');
             }
             document.getElementById('property-status').textContent = `Selected Property: ${propertyName}`;
         }
@@ -850,11 +1705,9 @@
 
             const gridHTML = availableProps.map(prop => {
                 const isSelected = prop.id === currentSelectedPropertyId;
-                const cardClass = isSelected 
-                    ? 'ring-4 ring-indigo-500 bg-indigo-100 shadow-xl' 
-                    : 'border-gray-200 bg-white hover:border-indigo-400 hover:shadow-lg transition duration-150';
+                const cardClass = isSelected ? 'selected' : '';
                 return `
-                    <div id="card-${prop.id}" class="property-card p-4 rounded-xl cursor-pointer select-none border-2 ${cardClass}" onclick="selectProperty('${prop.id}', '${prop.name}')">
+                    <div id="card-${prop.id}" class="property-card p-4 rounded-xl cursor-pointer select-none border-2 border-gray-200 bg-white ${cardClass}" onclick="selectProperty('${prop.id}', '${prop.name}')">
                         <p class="text-lg font-bold text-gray-800">${prop.name}</p>
                         <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-indigo-400 mr-1"></i> ${prop.location}</p>
                         <p class="text-xs mt-1 text-green-600 font-medium">Available!</p>
@@ -928,11 +1781,15 @@
                 bookings.push(booking);
                 await saveData();
                 renderBookings();
+                renderCheckins(); // UPDATE CHECK-INS IN REAL-TIME
                 refreshPropertySelection();
                 renderAvailabilityCalendar(); // UPDATE CALENDAR IN REAL-TIME
                 currentSelectedPropertyId = '';
                 this.reset();
                 showMessage(`Booking created successfully! ID: ${booking.id}`, 'success');
+                
+                // Update stats
+                document.getElementById('booking-count').textContent = bookings.length;
             });
 
             document.getElementById('add-property-form').addEventListener('submit', async function(e) {
@@ -966,24 +1823,42 @@
                 showMessage('Google Sheets configuration saved.', 'success');
             });
 
-            document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+            document.getElementById('admin-login-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const username = document.getElementById('adminUsername').value;
                 const password = document.getElementById('adminPassword').value;
                 const msg = document.getElementById('login-message');
 
-                // Check credentials
-                if (username === 'aikyaadmin' && password === 'admin123') {
-                    currentUserRole = 'Admin';
+                // Ensure users are loaded
+                await loadUsers();
+                
+                const authenticatedUser = authenticateUser(username, password);
+                if (authenticatedUser) {
+                    currentUserRole = authenticatedUser.role;
                     msg.textContent = '';
                     // Save login state
-                    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify({ username: username, role: 'Admin' }));
+                    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authenticatedUser));
                     updateAdminUI();
-                    showMessage('Login successful! Welcome Admin.', 'success');
+                    showMessage(`Login successful! Welcome ${authenticatedUser.role} ${authenticatedUser.username}.`, 'success');
                 } else {
                     currentUserRole = null;
                     msg.textContent = 'Invalid username or password.';
                     showMessage('Login failed: Invalid credentials.', 'error');
+                }
+            });
+
+            // Search input listeners for Enter key
+            document.getElementById('searchBookingId').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                }
+            });
+
+            document.getElementById('searchPhone').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
                 }
             });
 
@@ -1001,6 +1876,7 @@
             document.getElementById('checkOutDate').min = todayHtml;
             document.getElementById('availCheckIn').min = todayHtml;
             document.getElementById('availCheckOut').min = todayHtml;
+            document.getElementById('checkin-filter-date').value = todayHtml;
 
             // Check if user is already logged in
             const savedUser = localStorage.getItem(STORAGE_KEY_USER);
@@ -1012,13 +1888,18 @@
             // Initialize views
             renderProperties();
             renderBookings();
+            renderCheckins(); // INITIALIZE CHECK-INS
             renderSheetConfigStatus();
             renderAvailabilityCalendar(); // INITIALIZE CALENDAR
             updateAdminUI();
-            switchTab('booking');
+            switchTab('checkins'); // DEFAULT TO CHECK-INS TAB
+            
+            // Update stats
+            document.getElementById('property-count').textContent = properties.length;
+            document.getElementById('booking-count').textContent = bookings.length;
         }
 
-        // FIXED: Booking deletion function - now deletes from Supabase and updates calendar
+        // FIXED: Booking deletion function
         async function handleCancellation() {
             const bookingId = document.getElementById('bookingIdCancel').value.trim().toUpperCase();
             if (!bookingId) {
@@ -1059,9 +1940,13 @@
                         
                         // Update UI
                         renderBookings();
+                        renderCheckins(); // UPDATE CHECK-INS IN REAL-TIME
                         refreshPropertySelection();
                         renderAvailabilityCalendar(); // UPDATE CALENDAR IN REAL-TIME
                         document.getElementById('bookingIdCancel').value = '';
+                        
+                        // Update stats
+                        document.getElementById('booking-count').textContent = bookings.length;
                         
                         showMessage(`Booking ${bookingId} has been cancelled successfully.`, 'success');
                         
@@ -1072,18 +1957,24 @@
                         // Reload data to ensure sync with Supabase
                         await loadData();
                         renderBookings();
+                        renderCheckins();
                         renderAvailabilityCalendar();
                     }
                 }
             );
         }
 
-        function renderBookings() {
+        function renderBookings(bookingsToRender = null, isSearch = false) {
             const container = document.getElementById('booking-list-container');
-            const sortedBookings = [...bookings].sort((a, b) => compareDMYDates(a.check_in_date, b.check_in_date));
+            let bookingsData = bookingsToRender || bookings;
+            
+            const sortedBookings = [...bookingsData].sort((a, b) => compareDMYDates(a.check_in_date, b.check_in_date));
 
             if (sortedBookings.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 p-4 border border-dashed rounded-lg text-center">No bookings found.</p>';
+                const message = isSearch ? 
+                    'No bookings match your search criteria.' : 
+                    'No bookings found.';
+                container.innerHTML = `<p class="text-gray-500 p-4 border border-dashed rounded-lg text-center">${message}</p>`;
                 return;
             }
 
@@ -1096,37 +1987,199 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source / Amount</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         ${sortedBookings.map(b => {
                             let syncClass = b.sync_status === 'Synced' ? 'bg-green-100 text-green-700' : 
                                           b.sync_status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+                            
                             return `
-                                <tr>
+                                <tr class="${isSearch ? 'bg-blue-50' : ''}">
                                     <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
-                                        ${b.id}<br>
+                                        <div class="${isSearch ? 'font-extrabold' : ''}">${b.id}</div>
                                         <span class="text-xs font-medium px-2 py-0.5 rounded-full ${syncClass}">${b.sync_status}</span>
                                     </td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${b.guest_name}<br>
+                                        <div class="${isSearch ? 'font-semibold' : ''}">${b.guest_name}</div>
                                         <span class="text-xs text-gray-500">${b.phone_number || 'N/A'}</span>
                                     </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${b.property_name}</td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 ${isSearch ? 'font-semibold' : ''}">${b.property_name}</td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 ${isSearch ? 'font-semibold' : ''}">
                                         ${b.check_in_date} <i class="fas fa-arrow-right text-xs mx-1 text-gray-400"></i> ${b.check_out_date}
                                     </td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <span class="font-medium text-xs text-indigo-500">${b.source}</span><br>
-                                        <span class="font-bold text-sm text-green-600">$${b.amount_paid}</span>
+                                        <span class="font-medium text-xs text-indigo-500 ${isSearch ? 'font-semibold' : ''}">${b.source}</span><br>
+                                        <span class="font-bold text-sm text-green-600">₹${b.amount_paid}</span>
+                                    </td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <button onclick="quickCancelBooking('${b.id}')" class="text-red-500 hover:text-red-700 p-1 rounded transition quick-action-btn" title="Cancel Booking">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                        <button onclick="copyBookingId('${b.id}')" class="text-blue-500 hover:text-blue-700 p-1 rounded transition quick-action-btn ml-2" title="Copy Booking ID">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             `;
                         }).join('')}
                     </tbody>
                 </table>
+                ${isSearch ? `
+                    <div class="p-4 bg-blue-50 border-t border-blue-200 text-sm text-blue-700 flex justify-between items-center">
+                        <span>Showing ${sortedBookings.length} search result(s)</span>
+                        <button onclick="clearSearch()" class="text-blue-800 hover:text-blue-900 underline text-xs">
+                            Show All Bookings
+                        </button>
+                    </div>
+                ` : ''}
             `;
             container.innerHTML = tableHTML;
+        }
+
+        // Quick action functions
+        window.quickCancelBooking = function(bookingId) {
+            document.getElementById('bookingIdCancel').value = bookingId;
+            switchTab('booking');
+            showMessage(`Booking ID ${bookingId} copied to cancellation field`, 'info');
+        }
+
+        window.copyBookingId = function(bookingId) {
+            navigator.clipboard.writeText(bookingId).then(() => {
+                showMessage(`Booking ID ${bookingId} copied to clipboard!`, 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const tempInput = document.createElement('input');
+                tempInput.value = bookingId;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showMessage(`Booking ID ${bookingId} copied to clipboard!`, 'success');
+            });
+        }
+
+        // Search functionality
+        window.handleSearch = function() {
+            const bookingId = document.getElementById('searchBookingId').value.trim().toUpperCase();
+            const phoneNumber = document.getElementById('searchPhone').value.trim();
+            
+            // Clear previous search
+            currentSearchTerm = '';
+            currentSearchType = '';
+            
+            if (!bookingId && !phoneNumber) {
+                showMessage('Please enter either Booking ID or Phone Number to search.', 'error');
+                return;
+            }
+            
+            let searchResults = [];
+            let searchType = '';
+            let searchTerm = '';
+            
+            if (bookingId) {
+                searchResults = bookings.filter(booking => 
+                    booking.id.includes(bookingId)
+                );
+                searchType = 'Booking ID';
+                searchTerm = bookingId;
+            } else if (phoneNumber) {
+                searchResults = bookings.filter(booking => 
+                    booking.phone_number && booking.phone_number.includes(phoneNumber)
+                );
+                searchType = 'Phone Number';
+                searchTerm = phoneNumber;
+            }
+            
+            // Update search state
+            currentSearchTerm = searchTerm;
+            currentSearchType = searchType;
+            
+            // Display search results
+            const resultsInfo = document.getElementById('search-results-info');
+            if (searchResults.length > 0) {
+                resultsInfo.className = 'mt-4 p-3 rounded-lg bg-green-100 text-green-700 flex items-center';
+                resultsInfo.innerHTML = `
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Found ${searchResults.length} booking(s) matching ${searchType}: "${searchTerm}"
+                    <button onclick="clearSearch()" class="ml-auto text-green-800 hover:text-green-900">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+            } else {
+                resultsInfo.className = 'mt-4 p-3 rounded-lg bg-red-100 text-red-700 flex items-center';
+                resultsInfo.innerHTML = `
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    No bookings found for ${searchType}: "${searchTerm}"
+                    <button onclick="clearSearch()" class="ml-auto text-red-800 hover:text-red-900">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+            }
+            resultsInfo.classList.remove('hidden');
+            
+            // Render the search results
+            renderBookings(searchResults, true);
+        }
+
+        window.clearSearch = function() {
+            document.getElementById('searchBookingId').value = '';
+            document.getElementById('searchPhone').value = '';
+            document.getElementById('search-results-info').classList.add('hidden');
+            currentSearchTerm = '';
+            currentSearchType = '';
+            renderBookings(); // Render all bookings
+        }
+
+        // Availability range check
+        window.handleAvailabilityRangeCheck = function() {
+            const checkInHtml = document.getElementById('availCheckIn').value;
+            const checkOutHtml = document.getElementById('availCheckOut').value;
+            const checkIn = htmlDateToDMY(checkInHtml);
+            const checkOut = htmlDateToDMY(checkOutHtml);
+            
+            const listContainer = document.getElementById('available-properties-for-range');
+            const rangeStatus = document.getElementById('range-status');
+
+            listContainer.innerHTML = '';
+            
+            if (!checkIn || !checkOut || compareDMYDates(checkIn, checkOut) >= 0) {
+                rangeStatus.innerHTML = '<p class="text-red-500">Please select valid dates.</p>';
+                return;
+            }
+            
+            const availableProps = properties.filter(prop => isPropertyAvailable(prop.id, checkIn, checkOut));
+
+            if (availableProps.length === 0) {
+                rangeStatus.innerHTML = `<p class="text-red-700 font-semibold p-3 bg-red-100 rounded-lg">No properties available.</p>`;
+                return;
+            }
+
+            rangeStatus.innerHTML = `<p class="text-green-700 font-semibold">Found ${availableProps.length} available property(s).</p>`;
+            
+            const listHTML = availableProps.map(prop => `
+                <div class="flex items-center justify-between p-3 bg-white border border-indigo-200 rounded-lg shadow-sm property-card">
+                    <div>
+                        <p class="font-semibold text-indigo-700">${prop.name}</p>
+                        <p class="text-sm text-gray-500">${prop.location}</p>
+                    </div>
+                    <button onclick="bookPropertyFromAvailability('${prop.id}', '${checkIn}', '${checkOut}')" class="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                        <i class="fas fa-hand-point-right mr-1"></i> Book Now
+                    </button>
+                </div>
+            `).join('');
+            
+            listContainer.innerHTML += listHTML;
+        }
+
+        window.bookPropertyFromAvailability = function(propertyId, checkIn, checkOut) {
+            document.getElementById('checkInDate').value = dmyToHtmlDate(checkIn);
+            document.getElementById('checkOutDate').value = dmyToHtmlDate(checkOut);
+            currentSelectedPropertyId = propertyId;
+            switchTab('booking');
+            refreshPropertySelection();
+            showMessage(`Property pre-selected. Fill guest details.`, 'info');
         }
 
         function renderProperties() {
@@ -1145,7 +2198,7 @@
             }
 
             container.innerHTML = properties.map(p => `
-                <div class="flex items-center justify-between p-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between p-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm property-card">
                     <div>
                         <p class="text-lg font-semibold text-gray-900">${p.name}</p>
                         <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i> ${p.location}</p>
@@ -1157,9 +2210,12 @@
                     ` : '<span class="text-xs text-gray-400">View Only</span>'}
                 </div>
             `).join('');
+            
+            // Update stats
+            document.getElementById('property-count').textContent = properties.length;
         }
 
-        // FIXED: Property deletion function - updates calendar in real-time
+        // Property deletion function
         async function removeProperty(propertyId) {
             if (currentUserRole !== 'Admin') {
                 showMessage('Access Denied: Admin only.', 'error');
@@ -1202,6 +2258,9 @@
                         renderProperties();
                         refreshPropertySelection();
                         renderAvailabilityCalendar(); // UPDATE CALENDAR IN REAL-TIME
+                        
+                        // Update stats
+                        document.getElementById('property-count').textContent = properties.length;
                         
                         showMessage(`Property "${prop.name}" has been permanently deleted.`, 'success');
                         
@@ -1246,14 +2305,16 @@
             const welcomeMessage = document.getElementById('role-welcome-message');
             
             renderProperties();
+            renderUserList();
 
             if (currentUserRole) {
                 // User is logged in - show dashboard
                 loginContainer.classList.add('hidden');
                 dashboard.classList.remove('hidden');
-                const bgColor = 'bg-green-100 text-green-700';
+                const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
+                const bgColor = currentUser.role === 'Admin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
                 welcomeMessage.className = `text-lg font-medium p-3 rounded-lg flex items-center ${bgColor}`;
-                welcomeMessage.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Welcome, Admin!`;
+                welcomeMessage.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Welcome, ${currentUser.role} ${currentUser.username}!`;
             } else {
                 // User is not logged in - show login form with empty fields
                 loginContainer.classList.remove('hidden');
@@ -1268,55 +2329,6 @@
             localStorage.removeItem(STORAGE_KEY_USER);
             updateAdminUI();
             showMessage('Logged out successfully.', 'info');
-        }
-
-        window.handleAvailabilityRangeCheck = function() {
-            const checkInHtml = document.getElementById('availCheckIn').value;
-            const checkOutHtml = document.getElementById('availCheckOut').value;
-            const checkIn = htmlDateToDMY(checkInHtml);
-            const checkOut = htmlDateToDMY(checkOutHtml);
-            
-            const listContainer = document.getElementById('available-properties-for-range');
-            const rangeStatus = document.getElementById('range-status');
-
-            listContainer.innerHTML = '';
-            
-            if (!checkIn || !checkOut || compareDMYDates(checkIn, checkOut) >= 0) {
-                rangeStatus.innerHTML = '<p class="text-red-500">Please select valid dates.</p>';
-                return;
-            }
-            
-            const availableProps = properties.filter(prop => isPropertyAvailable(prop.id, checkIn, checkOut));
-
-            if (availableProps.length === 0) {
-                rangeStatus.innerHTML = `<p class="text-red-700 font-semibold p-3 bg-red-100 rounded-lg">No properties available.</p>`;
-                return;
-            }
-
-            rangeStatus.innerHTML = `<p class="text-green-700 font-semibold">Found ${availableProps.length} available property(s).</p>`;
-            
-            const listHTML = availableProps.map(prop => `
-                <div class="flex items-center justify-between p-3 bg-white border border-indigo-200 rounded-lg shadow-sm">
-                    <div>
-                        <p class="font-semibold text-indigo-700">${prop.name}</p>
-                        <p class="text-sm text-gray-500">${prop.location}</p>
-                    </div>
-                    <button onclick="bookPropertyFromAvailability('${prop.id}', '${checkIn}', '${checkOut}')" class="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
-                        <i class="fas fa-hand-point-right mr-1"></i> Book Now
-                    </button>
-                </div>
-            `).join('');
-            
-            listContainer.innerHTML += listHTML;
-        }
-
-        window.bookPropertyFromAvailability = function(propertyId, checkIn, checkOut) {
-            document.getElementById('checkInDate').value = dmyToHtmlDate(checkIn);
-            document.getElementById('checkOutDate').value = dmyToHtmlDate(checkOut);
-            currentSelectedPropertyId = propertyId;
-            switchTab('booking');
-            refreshPropertySelection();
-            showMessage(`Property pre-selected. Fill guest details.`, 'info');
         }
     </script>
 </body>
