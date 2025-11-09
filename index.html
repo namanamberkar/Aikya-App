@@ -1479,62 +1479,83 @@
 
         // --- INVOICE CONFIGURATION ---
         async function loadInvoiceConfig() {
-            try {
-                const { data, error } = await supabase
-                    .from('invoice_config')
-                    .select('*')
-                    .eq('id', 'main')
-                    .single();
+    try {
+        const { data, error } = await supabase
+            .from('invoice_config')
+            .select('*')
+            .eq('id', 'main')
+            .single();
 
-                if (!error && data) {
-                    invoiceConfig = data;
-                } else {
-                    // Create default config if not exists
-                    invoiceConfig = {
-                        id: 'main',
-                        service_gst_rate: 18,
-                        room_gst_rate: 5,
-                        company_name: 'Aikya Properties',
-                        company_phone: '+91 98765 43210',
-                        company_address: '123 Property Street, Bangalore, Karnataka - 560001',
-                        company_email: 'info@aikyaproperties.com',
-                        company_website: 'www.aikyaproperties.com'
-                    };
-                    
-                    const { error: insertError } = await supabase
-                        .from('invoice_config')
-                        .insert([invoiceConfig]);
-                    
-                    if (insertError) {
-                        console.error("Error creating invoice config:", insertError);
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading invoice config:', e);
+        if (!error && data) {
+            invoiceConfig = {
+                ...data,
+                // Add default values for the UI fields that aren't in the database
+                company_name: data.company_name || 'Aikya Properties',
+                company_phone: data.company_phone || '+91 98765 43210',
+                company_address: data.company_address || '123 Property Street, Bangalore, Karnataka - 560001',
+                company_email: data.company_email || 'info@aikyaproperties.com',
+                company_website: data.company_website || 'www.aikyaproperties.com'
+            };
+            console.log("Invoice config loaded:", invoiceConfig);
+        } else {
+            console.error("Error loading invoice config:", error);
+            // Set default invoice config
+            invoiceConfig = {
+                id: 'main',
+                service_gst_rate: 18,
+                room_gst_rate: 5,
+                company_name: 'Aikya Properties',
+                company_phone: '+91 98765 43210',
+                company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                company_email: 'info@aikyaproperties.com',
+                company_website: 'www.aikyaproperties.com'
+            };
+            
+            const { error: insertError } = await supabase
+                .from('invoice_config')
+                .insert([{
+                    id: 'main',
+                    service_gst_rate: 18,
+                    room_gst_rate: 5
+                }]);
+            
+            if (insertError) {
+                console.error("Error creating invoice config:", insertError);
             }
         }
+    } catch (e) {
+        console.error('Error loading invoice config:', e);
+    }
+}
 
         async function saveInvoiceConfig(configData) {
-            try {
-                const { error } = await supabase
-                    .from('invoice_config')
-                    .upsert([{
-                        id: 'main',
-                        ...configData,
-                        updated_at: new Date().toISOString()
-                    }]);
+    try {
+        // Only save the fields that actually exist in your invoice_config table
+        const saveData = {
+            id: 'main',
+            service_gst_rate: parseFloat(configData.service_gst_rate),
+            room_gst_rate: parseFloat(configData.room_gst_rate),
+            updated_at: new Date().toISOString()
+        };
 
-                if (error) {
-                    throw new Error(`Database error: ${error.message}`);
-                }
+        const { error } = await supabase
+            .from('invoice_config')
+            .upsert([saveData]);
 
-                invoiceConfig = { ...invoiceConfig, ...configData };
-                return true;
-            } catch (error) {
-                console.error('Failed to save invoice config:', error);
-                return false;
-            }
+        if (error) {
+            throw new Error(`Database error: ${error.message}`);
         }
+
+        // Update local config with only the saved fields
+        invoiceConfig.service_gst_rate = saveData.service_gst_rate;
+        invoiceConfig.room_gst_rate = saveData.room_gst_rate;
+        
+        return true;
+    } catch (error) {
+        console.error('Failed to save invoice config:', error);
+        return false;
+    }
+}
 
         function renderInvoiceConfigForm() {
             const container = document.getElementById('invoice-form-container');
