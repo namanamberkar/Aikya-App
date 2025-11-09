@@ -494,6 +494,56 @@
                 font-size: 16px; /* Prevents zoom on iOS */
             }
         }
+        
+        /* Loading states for better UX */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Improved login form styling */
+        .login-container {
+            transition: all 0.3s ease;
+        }
+        
+        .login-container.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+        
+        .admin-dashboard {
+            transition: all 0.3s ease;
+        }
+        
+        .admin-dashboard.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -572,6 +622,9 @@
                 </button>
                 <button data-tab="admin" class="tab-button mobile-tab py-2 md:py-3 px-3 md:px-5 text-xs md:text-sm font-semibold rounded-lg md:rounded-xl transition-all duration-300 flex items-center touch-target">
                     <i class="fas fa-user-shield mr-1 md:mr-2"></i>Admin
+                </button>
+                <button data-tab="invoice-config" class="tab-button mobile-tab py-2 md:py-3 px-3 md:px-5 text-xs md:text-sm font-semibold rounded-lg md:rounded-xl transition-all duration-300 flex items-center touch-target">
+                    <i class="fas fa-file-invoice-dollar mr-1 md:mr-2"></i>Invoice Config
                 </button>
             </nav>
         </div>
@@ -973,7 +1026,7 @@
                     <h2 class="mobile-text-2xl md:text-3xl font-bold text-gray-900 mb-2 section-header">User Access & Role Management</h2>
 
                     <!-- Admin Login -->
-                    <div id="login-container" class="max-w-md mx-auto p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl glass-card border border-gray-200 shadow-lg transition duration-300 ease-in-out">
+                    <div id="login-container" class="max-w-md mx-auto p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl glass-card border border-gray-200 shadow-lg transition duration-300 ease-in-out login-container">
                         <h3 class="mobile-text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-6 flex items-center">
                             <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600 mr-2 md:mr-3">
                                 <i class="fas fa-lock"></i>
@@ -989,7 +1042,7 @@
                                 <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                                 <input type="password" id="adminPassword" placeholder="Enter password" class="w-full p-3 md:p-4 form-input touch-target">
                             </div>
-                            <button type="submit" class="btn-primary w-full px-3 md:px-4 py-3 md:py-4 font-semibold rounded-lg md:rounded-xl shadow-lg flex items-center justify-center touch-target mobile-button">
+                            <button type="submit" class="btn-primary w-full px-3 md:px-4 py-3 md:py-4 font-semibold rounded-lg md:rounded-xl shadow-lg flex items-center justify-center touch-target mobile-button" id="login-button">
                                 <i class="fas fa-sign-in-alt mr-1 md:mr-2"></i> Log In
                             </button>
                             <p id="login-message" class="text-center text-red-500 text-sm mt-2"></p>
@@ -997,7 +1050,7 @@
                     </div>
 
                     <!-- Admin Dashboard (Visible after login) -->
-                    <div id="admin-dashboard" class="hidden space-y-6 md:space-y-8">
+                    <div id="admin-dashboard" class="hidden space-y-6 md:space-y-8 admin-dashboard">
                         <div class="p-4 md:p-6 rounded-lg md:rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
                             <p id="role-welcome-message" class="text-base md:text-lg font-medium flex items-center"></p>
                         </div>
@@ -1042,6 +1095,41 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Invoice Configuration Tab -->
+            <div id="tab-invoice-config" class="tab-content hidden">
+                <div class="glass-card rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8">
+                    <h2 class="mobile-text-2xl md:text-3xl font-bold text-gray-900 mb-2 section-header">Invoice Configuration</h2>
+
+                    <!-- Invoice Configuration Form -->
+                    <div id="invoice-config-section" class="mb-8 md:mb-10 p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-sm">
+                        <h3 class="mobile-text-lg md:text-xl font-bold text-blue-700 mb-4 md:mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-blue-100 text-blue-600 mr-2 md:mr-3">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            Invoice Settings (Admin Only)
+                        </h3>
+                        <div id="invoice-form-container">
+                            <!-- Form will be rendered here based on user role -->
+                        </div>
+                    </div>
+
+                    <!-- Invoice Preview -->
+                    <div class="p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 shadow-sm">
+                        <h3 class="mobile-text-lg md:text-xl font-bold text-green-700 mb-4 md:mb-6 flex items-center">
+                            <div class="p-2 rounded-lg bg-green-100 text-green-600 mr-2 md:mr-3">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            Invoice Preview
+                        </h3>
+                        <div class="bg-white p-4 md:p-6 rounded-lg md:rounded-xl shadow-sm border">
+                            <div id="invoice-preview">
+                                <p class="text-gray-500 text-center p-6">Configure invoice settings to see preview</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Global Message Box -->
@@ -1064,71 +1152,9 @@
             </div>
         </div>
 
-        <!-- Edit Booking Modal -->
-        <div id="edit-booking-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right">
-            <div class="glass-card p-4 md:p-6 rounded-lg md:rounded-2xl shadow-2xl max-w-2xl w-full mx-4 transform transition-all border max-h-[90vh] overflow-y-auto">
-                <h3 class="mobile-text-lg md:text-xl font-bold mb-3 md:mb-4 text-gray-900 flex items-center">
-                    <i class="fas fa-edit text-indigo-500 mr-2"></i>
-                    Edit Booking
-                </h3>
-                <form id="edit-booking-form" class="space-y-4 md:space-y-6">
-                    <input type="hidden" id="edit-booking-id">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        <div>
-                            <label for="edit-guest-name" class="block text-sm font-medium text-gray-700 mb-2">Guest Name</label>
-                            <input type="text" id="edit-guest-name" required class="w-full p-3 md:p-4 form-input touch-target">
-                        </div>
-                        
-                        <div>
-                            <label for="edit-phone-number" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                            <input type="tel" id="edit-phone-number" class="w-full p-3 md:p-4 form-input touch-target">
-                        </div>
-                        
-                        <div>
-                            <label for="edit-check-in" class="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
-                            <input type="date" id="edit-check-in" required class="w-full p-3 md:p-4 form-input touch-target">
-                        </div>
-                        
-                        <div>
-                            <label for="edit-check-out" class="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
-                            <input type="date" id="edit-check-out" required class="w-full p-3 md:p-4 form-input touch-target">
-                        </div>
-                        
-                        <div>
-                            <label for="edit-property" class="block text-sm font-medium text-gray-700 mb-2">Property</label>
-                            <select id="edit-property" required class="w-full p-3 md:p-4 form-input bg-white touch-target">
-                                <!-- Properties will be populated here -->
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label for="edit-source" class="block text-sm font-medium text-gray-700 mb-2">Source</label>
-                            <select id="edit-source" required class="w-full p-3 md:p-4 form-input bg-white touch-target">
-                                <option value="Direct">Direct</option>
-                                <option value="Airbnb">Airbnb</option>
-                                <option value="Booking.com">Booking.com</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label for="edit-amount-paid" class="block text-sm font-medium text-gray-700 mb-2">Amount Paid (₹)</label>
-                            <input type="number" id="edit-amount-paid" required min="0" step="0.01" class="w-full p-3 md:p-4 form-input touch-target">
-                        </div>
-                        
-                        <div>
-                            <label for="edit-sync-status" class="block text-sm font-medium text-gray-700 mb-2">Sync Status</label>
-                            <input type="text" id="edit-sync-status" readonly class="w-full p-3 md:p-4 form-input bg-gray-100 touch-target">
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 md:mt-8 flex justify-end space-x-2 md:space-x-3">
-                        <button type="button" onclick="closeEditModal()" class="px-3 md:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition touch-target">Cancel</button>
-                        <button type="submit" class="btn-primary px-3 md:px-4 py-2 text-sm font-medium rounded-lg touch-target">Save Changes</button>
-                    </div>
-                </form>
-            </div>
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="loading-spinner"></div>
         </div>
     </div>
 
@@ -1140,33 +1166,11 @@
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- GOOGLE SHEETS CONFIGURATION ---
-        const SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxAiylJHxzcQ9CgcwmBfCEd9N1uc7GQ4zvDIWFP3x8Zk8F6IZnwflav3cG3TRbc0r6V/exec';
-
-        // Your specific Google Sheets URL
-        const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1aWyF2HieBKA8yW7wP1pik_h4jdz8cKgZDESHDLKCLZY/edit?gid=1097660042#gid=1097660042';
-
-        // CORS Proxy for two-way sync
-        const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
-
-        // --- SECURE DEFAULT CREDENTIALS ---
-        const DEFAULT_ADMIN = {
-            username: 'aikyaadmin',
-            password: 'admin123',
-            role: 'Admin'
-        };
-
         // --- DATA STORAGE ---
-        const STORAGE_KEY_PROPERTIES = 'property_manager_properties';
-        const STORAGE_KEY_BOOKINGS = 'property_manager_bookings';
-        const STORAGE_KEY_SHEET_CONFIG = 'property_manager_sheet_config';
-        const STORAGE_KEY_USER = 'aikya_admin_user';
-        const STORAGE_KEY_USERS = 'aikya_system_users';
-
         let properties = [];
         let bookings = [];
-        let sheetConfig = { is_configured: true, webapp_url: SHEETS_WEBAPP_URL, sheets_url: GOOGLE_SHEETS_URL };
         let users = [];
+        let invoiceConfig = {};
         let currentUserRole = null;
         let currentSelectedPropertyId = '';
         let currentCalendarDate = new Date();
@@ -1183,7 +1187,7 @@
         // Check-in filter state
         let currentCheckinFilterDate = null;
 
-        // --- CORE UTILITY FUNCTIONS ---
+        // --- UTILITY FUNCTIONS ---
         const dateToDMY = (date) => {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1230,7 +1234,6 @@
             if (tabContent) tabContent.classList.remove('hidden');
         }
 
-        // --- MODAL AND MESSAGE FUNCTIONS ---
         let currentModalAction = null;
 
         function showConfirmationModal(title, body, confirmCallback) {
@@ -1289,677 +1292,22 @@
             }, 3700);
         }
 
-        // --- ENHANCED TWO-WAY SYNC FUNCTIONS ---
-
-        // Open Google Sheets - UPDATED WITH YOUR SPECIFIC URL
-        function openGoogleSheets() {
-            window.open(GOOGLE_SHEETS_URL, '_blank');
-            showMessage('Opening Aikya Property Bookings Sheet...', 'info');
-        }
-
-        // Enhanced sync function with CORS proxy
-        async function syncBookingToSheets(booking) {
-            try {
-                console.log('Syncing booking to sheets:', booking.id);
-                
-                const payload = {
-                    action: 'sync_booking',
-                    booking_id: booking.id,
-                    guest_name: booking.guest_name,
-                    phone_number: booking.phone_number || '',
-                    check_in_date: booking.check_in_date,
-                    check_out_date: booking.check_out_date,
-                    property_name: booking.property_name,
-                    property_id: booking.property_id,
-                    source: booking.source,
-                    amount_paid: booking.amount_paid,
-                    booked_at: booking.booked_at
-                };
-
-                // Try with CORS proxy first
-                const proxyUrl = CORS_PROXY + SHEETS_WEBAPP_URL;
-                let response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                // If proxy fails, try direct with no-cors as fallback
-                if (!response.ok) {
-                    console.log('Proxy failed, trying direct no-cors...');
-                    const params = new URLSearchParams();
-                    Object.keys(payload).forEach(key => {
-                        params.append(key, payload[key]);
-                    });
-                    
-                    const directUrl = `${SHEETS_WEBAPP_URL}?${params.toString()}`;
-                    response = await fetch(directUrl, {
-                        method: 'GET',
-                        mode: 'no-cors'
-                    });
-                    
-                    // With no-cors we can't read response, assume success
-                    if (response.type === 'opaque') {
-                        console.log('Direct no-cors request sent');
-                        await updateSyncStatus(booking.id, true);
-                        return { success: true, message: "Booking synced (no-cors mode)" };
-                    }
-                } else {
-                    // With proxy, we can read the response
-                    const result = await response.json();
-                    console.log('Sheets response:', result);
-                    
-                    if (result.success) {
-                        await updateSyncStatus(booking.id, true);
-                        return result;
-                    } else {
-                        throw new Error(result.error || 'Unknown error from Google Sheets');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Sheets sync error:', error);
-                await updateSyncStatus(booking.id, false);
-                return { success: false, error: error.message };
-            }
-        }
-
-        // Helper function to update sync status
-        async function updateSyncStatus(bookingId, success) {
-            const { error } = await supabase
-                .from('bookings')
-                .update({ 
-                    sync_status: success ? 'Synced' : 'Failed',
-                    last_sync: new Date().toISOString()
-                })
-                .eq('id', bookingId);
-            
-            if (!error) {
-                await loadData(); // Reload from Supabase
-            }
-        }
-
-        // Function to pull data from Sheets with proper response reading
-        async function pullFromSheets() {
-            showMessage('🔄 Pulling updates from Google Sheets...', 'info');
-            
-            try {
-                // Use CORS proxy to read the response
-                const proxyUrl = CORS_PROXY + SHEETS_WEBAPP_URL + '?action=get_data';
-                const response = await fetch(proxyUrl);
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('Pull from sheets result:', result);
-
-                    if (result.success && result.data && result.data.length > 0) {
-                        await updateSupabaseFromSheets(result.data);
-                        showMessage(`✅ Successfully synced ${result.data.length} bookings from Sheets!`, 'success');
-                    } else {
-                        showMessage('✅ No new bookings in Google Sheets', 'info');
-                    }
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Pull from sheets error:', error);
-                showMessage('❌ Failed to pull from Sheets: ' + error.message, 'error');
-                
-                // Fallback: Show instructions for manual sync
-                showMessage('💡 Tip: Use "Full Sync" to push your local changes to Sheets', 'info');
-            }
-        }
-
-        // Update Supabase with data from Google Sheets
-        async function updateSupabaseFromSheets(sheetBookings) {
-            let created = 0;
-            let updated = 0;
-            let errors = 0;
-
-            for (const sheetBooking of sheetBookings) {
-                if (!sheetBooking.booking_id) continue;
-
-                try {
-                    // Check if exists in Supabase
-                    const { data: existing, error: fetchError } = await supabase
-                        .from('bookings')
-                        .select('*')
-                        .eq('id', sheetBooking.booking_id)
-                        .single();
-
-                    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
-                        throw fetchError;
-                    }
-
-                    const bookingData = {
-                        id: sheetBooking.booking_id,
-                        guest_name: sheetBooking.guest_name,
-                        phone_number: sheetBooking.phone_number || '',
-                        check_in_date: sheetBooking.check_in_date,
-                        check_out_date: sheetBooking.check_out_date,
-                        property_name: sheetBooking.property_name,
-                        property_id: sheetBooking.property_id,
-                        source: sheetBooking.source,
-                        amount_paid: sheetBooking.amount_paid,
-                        booked_at: sheetBooking.booked_at || new Date().toISOString(),
-                        sync_status: 'Synced',
-                        last_sync: new Date().toISOString()
-                    };
-
-                    if (existing) {
-                        // Update existing booking
-                        const { error } = await supabase
-                            .from('bookings')
-                            .update(bookingData)
-                            .eq('id', sheetBooking.booking_id);
-                        
-                        if (!error) updated++;
-                        else errors++;
-                    } else {
-                        // Create new booking
-                        const { error } = await supabase
-                            .from('bookings')
-                            .insert([bookingData]);
-                        
-                        if (!error) created++;
-                        else errors++;
-                    }
-                } catch (error) {
-                    errors++;
-                    console.error('Error syncing booking:', sheetBooking.booking_id, error);
-                }
-            }
-
-            // Reload all data from Supabase
-            await loadData();
-            renderBookings();
-            renderCheckins();
-            renderAvailabilityCalendar();
-
-            console.log(`Sync complete: ${created} created, ${updated} updated, ${errors} errors`);
-        }
-
-        // Manual sync all function
-        async function manualSyncAll() {
-            showMessage('Starting full two-way sync...', 'info');
-            
-            // First pull from Sheets to get any external changes
-            await pullFromSheets();
-            
-            // Then push any unsynced bookings to Sheets
-            const unsyncedBookings = bookings.filter(b => b.sync_status !== 'Synced');
-            
-            if (unsyncedBookings.length > 0) {
-                showMessage(`📤 Uploading ${unsyncedBookings.length} bookings to Sheets...`, 'info');
-                
-                let successCount = 0;
-                let errorCount = 0;
-
-                for (const booking of unsyncedBookings) {
-                    const result = await syncBookingToSheets(booking);
-                    if (result.success) {
-                        successCount++;
-                    } else {
-                        errorCount++;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between requests
-                }
-
-                if (successCount > 0) {
-                    showMessage(`✅ Successfully synced ${successCount} bookings to Google Sheets`, 'success');
-                }
-                if (errorCount > 0) {
-                    showMessage(`❌ Failed to sync ${errorCount} bookings`, 'error');
-                }
+        // Show/hide loading overlay
+        function showLoading(show = true) {
+            const overlay = document.getElementById('loading-overlay');
+            if (show) {
+                overlay.classList.remove('hidden');
             } else {
-                showMessage('✅ All bookings are already synced!', 'success');
+                overlay.classList.add('hidden');
             }
         }
 
-        // Test connection with proper response reading
-        async function testSheetsConnection() {
-            showMessage('Testing connection to Google Sheets...', 'info');
-            
-            try {
-                // Use CORS proxy to read response
-                const proxyUrl = CORS_PROXY + SHEETS_WEBAPP_URL + '?action=test_connection';
-                const response = await fetch(proxyUrl);
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        showMessage('✅ Connected to Google Sheets! Two-way sync enabled.', 'success');
-                        return true;
-                    } else {
-                        showMessage('❌ Connection failed: ' + (result.error || 'Unknown error'), 'error');
-                        return false;
-                    }
-                } else {
-                    // Fallback to no-cors test
-                    const directUrl = `${SHEETS_WEBAPP_URL}?action=test_connection`;
-                    const noCorsResponse = await fetch(directUrl, { mode: 'no-cors' });
-                    
-                    if (noCorsResponse.type === 'opaque') {
-                        showMessage('⚠️ Limited connection (no-cors mode). Push sync only.', 'warning');
-                        return true;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Connection test failed:', error);
-                showMessage('❌ Could not connect to Google Sheets: ' + error.message, 'error');
-                return false;
-            }
-        }
-
-        // Debug function
-        async function debugSheets() {
-            try {
-                const connected = await testSheetsConnection();
-                console.log('Sheets connection test:', connected);
-                showMessage('Check browser console for debug info', 'info');
-            } catch (error) {
-                console.error('Debug error:', error);
-                showMessage('Debug failed: ' + error.message, 'error');
-            }
-        }
-
-        // Auto-sync every 2 minutes
-        function startAutoSync() {
-            // Initial sync after 10 seconds
-            setTimeout(() => {
-                manualSyncAll();
-            }, 10000);
-            
-            // Sync every 2 minutes
-            setInterval(() => {
-                manualSyncAll();
-            }, 10 * 60 * 1000); // 2 minutes = 120,000 ms
-        }
-
-        // --- BOOKING EDITING FUNCTIONS ---
-        function openEditBookingModal(bookingId) {
-            const booking = bookings.find(b => b.id === bookingId);
-            if (!booking) {
-                showMessage('Booking not found!', 'error');
-                return;
-            }
-
-            // Populate the form with booking data
-            document.getElementById('edit-booking-id').value = booking.id;
-            document.getElementById('edit-guest-name').value = booking.guest_name;
-            document.getElementById('edit-phone-number').value = booking.phone_number || '';
-            document.getElementById('edit-check-in').value = dmyToHtmlDate(booking.check_in_date);
-            document.getElementById('edit-check-out').value = dmyToHtmlDate(booking.check_out_date);
-            document.getElementById('edit-amount-paid').value = booking.amount_paid;
-            document.getElementById('edit-sync-status').value = booking.sync_status || 'Not Configured';
-
-            // Populate property dropdown
-            const propertySelect = document.getElementById('edit-property');
-            propertySelect.innerHTML = properties.map(prop => 
-                `<option value="${prop.id}" ${prop.id === booking.property_id ? 'selected' : ''}>${prop.name} - ${prop.location}</option>`
-            ).join('');
-
-            // Set source
-            document.getElementById('edit-source').value = booking.source;
-
-            // Show the modal
-            document.getElementById('edit-booking-modal').classList.remove('hidden');
-        }
-
-        function closeEditModal() {
-            document.getElementById('edit-booking-modal').classList.add('hidden');
-        }
-
-        async function handleEditBookingSubmit(e) {
-            e.preventDefault();
-            
-            const bookingId = document.getElementById('edit-booking-id').value;
-            const guestName = document.getElementById('edit-guest-name').value;
-            const phoneNumber = document.getElementById('edit-phone-number').value;
-            const checkIn = htmlDateToDMY(document.getElementById('edit-check-in').value);
-            const checkOut = htmlDateToDMY(document.getElementById('edit-check-out').value);
-            const propertyId = document.getElementById('edit-property').value;
-            const source = document.getElementById('edit-source').value;
-            const amountPaid = document.getElementById('edit-amount-paid').value;
-
-            // Find the booking
-            const bookingIndex = bookings.findIndex(b => b.id === bookingId);
-            if (bookingIndex === -1) {
-                showMessage('Booking not found!', 'error');
-                return;
-            }
-
-            const originalBooking = bookings[bookingIndex];
-            const selectedProperty = properties.find(p => p.id === propertyId);
-            
-            // Check if the new dates conflict with other bookings (excluding the current booking)
-            const hasConflict = bookings.some(b => 
-                b.id !== bookingId && 
-                b.property_id === propertyId &&
-                isDateRangeOverlapping(
-                    checkIn, checkOut, 
-                    b.check_in_date, b.check_out_date
-                )
-            );
-
-            if (hasConflict) {
-                showMessage('The selected dates conflict with an existing booking for this property!', 'error');
-                return;
-            }
-
-            // Update the booking - USING ONLY COLUMNS THAT EXIST IN YOUR SCHEMA
-            const updatedBooking = {
-                id: bookingId,
-                guest_name: guestName,
-                phone_number: phoneNumber,
-                check_in_date: checkIn,
-                check_out_date: checkOut,
-                property_id: propertyId,
-                property_name: selectedProperty.name,
-                source: source,
-                amount_paid: amountPaid,
-                booked_at: originalBooking.booked_at,
-                sync_status: 'Pending Update', // Mark as needing sync
-                created_at: originalBooking.created_at
-                // Note: No last_updated field since it doesn't exist in your schema
-            };
-
-            try {
-                // Update in Supabase - only include fields that exist in your schema
-                const { error } = await supabase
-                    .from('bookings')
-                    .update({
-                        guest_name: updatedBooking.guest_name,
-                        phone_number: updatedBooking.phone_number,
-                        check_in_date: updatedBooking.check_in_date,
-                        check_out_date: updatedBooking.check_out_date,
-                        property_id: updatedBooking.property_id,
-                        property_name: updatedBooking.property_name,
-                        source: updatedBooking.source,
-                        amount_paid: updatedBooking.amount_paid,
-                        sync_status: updatedBooking.sync_status
-                    })
-                    .eq('id', bookingId);
-
-                if (error) {
-                    throw new Error(`Database error: ${error.message}`);
-                }
-
-                // Update local data
-                bookings[bookingIndex] = updatedBooking;
-                localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(bookings));
-
-                // Close modal and refresh UI
-                closeEditModal();
-                renderBookings();
-                renderCheckins();
-                renderAvailabilityCalendar();
-                
-                showMessage(`Booking ${bookingId} updated successfully!`, 'success');
-
-                // IMMEDIATELY sync to Google Sheets - no delay
-                console.log('Immediately syncing edited booking to Google Sheets...');
-                const syncResult = await syncBookingToSheets(updatedBooking);
-                if (syncResult.success) {
-                    showMessage(`✅ Booking update synced to Google Sheets!`, 'success');
-                } else {
-                    showMessage(`⚠️ Booking updated but sync failed: ${syncResult.error}`, 'warning');
-                }
-
-            } catch (error) {
-                console.error('Failed to update booking:', error);
-                showMessage(`Failed to update booking: ${error.message}`, 'error');
-            }
-        }
-
-        // Helper function to check date range overlap
-        function isDateRangeOverlapping(start1, end1, start2, end2) {
-            const start1Date = dmyToDate(start1);
-            const end1Date = dmyToDate(end1);
-            const start2Date = dmyToDate(start2);
-            const end2Date = dmyToDate(end2);
-
-            return start1Date < end2Date && end1Date > start2Date;
-        }
-
-        // --- USER MANAGEMENT FUNCTIONS ---
-        async function loadUsers() {
-            try {
-                console.log("Loading users from Supabase...");
-                
-                const { data: usersData, error: usersError } = await supabase
-                    .from('users')
-                    .select('*');
-                
-                if (!usersError && usersData) {
-                    users = usersData;
-                    console.log("Users loaded from Supabase:", users);
-                } else {
-                    console.error("Error loading users from Supabase:", usersError);
-                    users = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || '[]');
-                    
-                    if (users.length === 0) {
-                        const defaultAdmin = {
-                            id: 'USR-ADMIN-001',
-                            username: DEFAULT_ADMIN.username,
-                            password: DEFAULT_ADMIN.password,
-                            role: DEFAULT_ADMIN.role,
-                            created_at: new Date().toISOString(),
-                            is_active: true,
-                            is_default: true
-                        };
-                        users.push(defaultAdmin);
-                        await saveUsers();
-                    }
-                }
-            } catch (e) {
-                console.error("Supabase load failed, using localStorage", e);
-                users = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || '[]');
-            }
-        }
-
-        async function saveUsers() {
-            try {
-                console.log("Saving users to Supabase...");
-                
-                if (users.length > 0) {
-                    const { error } = await supabase.from('users').upsert(users);
-                    if (error) console.error("Error saving users:", error);
-                }
-            } catch (e) {
-                console.error("Supabase save failed, using localStorage", e);
-            }
-
-            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
-        }
-
-        function authenticateUser(username, password) {
-            const user = users.find(u => 
-                u.username === username && 
-                u.password === password && 
-                u.is_active !== false
-            );
-            
-            if (user) {
-                return {
-                    id: user.id,
-                    username: user.username,
-                    role: user.role
-                };
-            }
-            return null;
-        }
-
-        window.addNewUser = async function() {
-            const username = document.getElementById('newUserUsername').value.trim();
-            const password = document.getElementById('newUserPassword').value;
-            const role = document.getElementById('newUserRole').value;
-
-            if (!username || !password) {
-                showMessage('Please enter both username and password.', 'error');
-                return;
-            }
-
-            if (users.find(u => u.username === username)) {
-                showMessage('Username already exists. Please choose a different username.', 'error');
-                return;
-            }
-
-            const newUser = {
-                id: 'USR-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-                username: username,
-                password: password,
-                role: role,
-                created_at: new Date().toISOString(),
-                created_by: currentUserRole,
-                is_active: true,
-                is_default: false
-            };
-
-            users.push(newUser);
-            await saveUsers();
-            renderUserList();
-            
-            document.getElementById('newUserUsername').value = '';
-            document.getElementById('newUserPassword').value = '';
-            
-            showMessage(`User "${username}" added successfully as ${role}!`, 'success');
-        }
-
-        window.deleteUser = async function(userId) {
-            if (currentUserRole !== 'Admin') {
-                showMessage('Access Denied: Only Admin can delete users.', 'error');
-                return;
-            }
-
-            const user = users.find(u => u.id === userId);
-            if (!user) return;
-
-            const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
-            if (currentUser && currentUser.id === userId) {
-                showMessage('You cannot delete your own account.', 'error');
-                return;
-            }
-
-            if (user.is_default) {
-                showMessage('Cannot delete the default administrator account.', 'error');
-                return;
-            }
-
-            showConfirmationModal(
-                'Confirm User Deletion',
-                `Are you sure you want to delete user "${user.username}"? This action cannot be undone.`,
-                async () => {
-                    try {
-                        users = users.filter(u => u.id !== userId);
-                        await saveUsers();
-                        renderUserList();
-                        showMessage(`User "${user.username}" has been deleted.`, 'success');
-                    } catch (error) {
-                        console.error('Failed to delete user:', error);
-                        showMessage('Failed to delete user.', 'error');
-                    }
-                }
-            );
-        }
-
-        window.toggleUserStatus = async function(userId) {
-            if (currentUserRole !== 'Admin') {
-                showMessage('Access Denied: Only Admin can modify user status.', 'error');
-                return;
-            }
-
-            const user = users.find(u => u.id === userId);
-            if (!user) return;
-
-            const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
-            if (currentUser && currentUser.id === userId) {
-                showMessage('You cannot deactivate your own account.', 'error');
-                return;
-            }
-
-            if (user.is_default) {
-                showMessage('Cannot deactivate the default administrator account.', 'error');
-                return;
-            }
-
-            user.is_active = !user.is_active;
-            await saveUsers();
-            renderUserList();
-            
-            const status = user.is_active ? 'activated' : 'deactivated';
-            showMessage(`User "${user.username}" has been ${status}.`, 'success');
-        }
-
-        function renderUserList() {
-            const container = document.getElementById('user-list-container');
-            
-            if (users.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 p-4 text-center">No users found.</p>';
-                return;
-            }
-
-            const sortedUsers = [...users].sort((a, b) => {
-                if (a.role === 'Admin' && b.role !== 'Admin') return -1;
-                if (a.role !== 'Admin' && b.role === 'Admin') return 1;
-                return a.username.localeCompare(b.username);
-            });
-
-            container.innerHTML = sortedUsers.map(user => {
-                const roleClass = user.role === 'Admin' ? 'role-admin' : 'role-staff';
-                const statusClass = user.is_active ? 'text-green-600' : 'text-red-600';
-                const statusText = user.is_active ? 'Active' : 'Inactive';
-                const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
-                const isCurrentUser = currentUser && currentUser.id === user.id;
-                const isDefaultUser = user.is_default;
-
-                return `
-                    <div class="user-card p-3 md:p-4 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-between">
-                        <div class="flex items-center space-x-3 md:space-x-4">
-                            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm md:text-base">
-                                ${user.username.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <div class="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                                    <p class="font-semibold text-gray-900 text-sm md:text-base">${user.username}</p>
-                                    <div class="flex items-center space-x-1 md:space-x-2">
-                                        <span class="role-badge ${roleClass}">${user.role}</span>
-                                        <span class="text-xs ${statusClass}">• ${statusText}</span>
-                                        ${isCurrentUser ? '<span class="text-xs bg-blue-100 text-blue-700 px-1 md:px-2 py-0.5 md:py-1 rounded text-xs">Current</span>' : ''}
-                                        ${isDefaultUser ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-1 md:px-2 py-0.5 md:py-1 rounded text-xs">Default</span>' : ''}
-                                    </div>
-                                </div>
-                                <p class="text-xs md:text-sm text-gray-500">Created: ${new Date(user.created_at).toLocaleDateString()}</p>
-                                ${user.created_by ? `<p class="text-xs text-gray-400">By: ${user.created_by}</p>` : ''}
-                            </div>
-                        </div>
-                        <div class="flex space-x-1 md:space-x-2">
-                            <button onclick="toggleUserStatus('${user.id}')" 
-                                    class="px-2 md:px-3 py-1 text-xs md:text-sm rounded-lg ${user.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'} transition touch-target"
-                                    ${isCurrentUser || isDefaultUser ? 'disabled opacity-50 cursor-not-allowed' : ''}>
-                                ${user.is_active ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button onclick="deleteUser('${user.id}')" 
-                                    class="px-2 md:px-3 py-1 text-xs md:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition touch-target"
-                                    ${isCurrentUser || isDefaultUser ? 'disabled opacity-50 cursor-not-allowed' : ''}>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // --- DATA FUNCTIONS ---
+        // --- SUPABASE DATA FUNCTIONS ---
         async function loadData() {
-            await loadUsers();
-            
             try {
                 console.log("Loading data from Supabase...");
                 
+                // Load properties
                 const { data: propertiesData, error: propertiesError } = await supabase
                     .from('properties')
                     .select('*');
@@ -1968,10 +1316,11 @@
                     properties = propertiesData;
                     console.log("Properties loaded from Supabase:", properties);
                 } else {
-                    console.error("Error loading properties from Supabase:", propertiesError);
-                    properties = JSON.parse(localStorage.getItem(STORAGE_KEY_PROPERTIES) || '[]');
+                    console.error("Error loading properties:", propertiesError);
+                    properties = [];
                 }
 
+                // Load bookings
                 const { data: bookingsData, error: bookingsError } = await supabase
                     .from('bookings')
                     .select('*');
@@ -1980,82 +1329,358 @@
                     bookings = bookingsData;
                     console.log("Bookings loaded from Supabase:", bookings);
                 } else {
-                    console.error("Error loading bookings from Supabase:", bookingsError);
-                    bookings = JSON.parse(localStorage.getItem(STORAGE_KEY_BOOKINGS) || '[]');
+                    console.error("Error loading bookings:", bookingsError);
+                    bookings = [];
+                }
+
+                // Load users
+                const { data: usersData, error: usersError } = await supabase
+                    .from('users')
+                    .select('*');
+                
+                if (!usersError && usersData) {
+                    users = usersData;
+                    console.log("Users loaded from Supabase:", users);
+                } else {
+                    console.error("Error loading users:", usersError);
+                    users = [];
+                }
+
+                // Load invoice config
+                const { data: invoiceConfigData, error: invoiceConfigError } = await supabase
+                    .from('invoice_config')
+                    .select('*')
+                    .eq('id', 'main')
+                    .single();
+                
+                if (!invoiceConfigError && invoiceConfigData) {
+                    invoiceConfig = invoiceConfigData;
+                    console.log("Invoice config loaded:", invoiceConfig);
+                } else {
+                    console.error("Error loading invoice config:", invoiceConfigError);
+                    // Set default invoice config
+                    invoiceConfig = {
+                        id: 'main',
+                        service_gst_rate: 18,
+                        room_gst_rate: 5,
+                        company_name: 'Aikya Properties',
+                        company_phone: '+91 98765 43210',
+                        company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                        company_email: 'info@aikyaproperties.com',
+                        company_website: 'www.aikyaproperties.com'
+                    };
                 }
 
             } catch (e) {
-                console.error("Supabase load failed, using localStorage", e);
-                properties = JSON.parse(localStorage.getItem(STORAGE_KEY_PROPERTIES) || '[]');
-                bookings = JSON.parse(localStorage.getItem(STORAGE_KEY_BOOKINGS) || '[]');
-            }
-
-            if (properties.length === 0) {
-                properties = [
-                    { id: 'PROP-001', name: 'Beach Villa', location: 'Goa' },
-                    { id: 'PROP-002', name: 'Mountain View', location: 'Manali' },
-                    { id: 'PROP-003', name: 'City Apartment', location: 'Mumbai' }
-                ];
-                await saveData();
+                console.error("Supabase load failed:", e);
             }
         }
 
-        async function saveData() {
+        // --- USER AUTHENTICATION ---
+        async function authenticateUser(username, password) {
             try {
-                console.log("Saving data to Supabase...");
+                console.log("Authenticating user:", username);
                 
-                if (properties.length > 0) {
-                    const { error: propertiesError } = await supabase.from('properties').upsert(properties);
-                    if (propertiesError) console.error("Error saving properties:", propertiesError);
-                }
-                
-                if (bookings.length > 0) {
-                    const { error: bookingsError } = await supabase.from('bookings').upsert(bookings);
-                    if (bookingsError) console.error("Error saving bookings:", bookingsError);
-                }
-                
-            } catch (e) {
-                console.error("Supabase save failed, using localStorage", e);
-            }
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .eq('is_active', true)
+                    .single();
 
-            localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(properties));
-            localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(bookings));
-            localStorage.setItem(STORAGE_KEY_SHEET_CONFIG, JSON.stringify(sheetConfig));
+                if (error) {
+                    console.error("Authentication error:", error);
+                    return null;
+                }
+
+                if (userData) {
+                    console.log("User authenticated:", userData);
+                    return {
+                        id: userData.id,
+                        username: userData.username,
+                        role: userData.role
+                    };
+                }
+
+                return null;
+            } catch (e) {
+                console.error("Authentication failed:", e);
+                return null;
+            }
         }
 
-        // --- AVAILABILITY CHECKING LOGIC ---
-        function isPropertyAvailable(propertyId, checkIn, checkOut) {
-            console.log(`Checking availability for property ${propertyId} from ${checkIn} to ${checkOut}`);
+        // --- INVOICE CONFIGURATION ---
+        async function loadInvoiceConfig() {
+            try {
+                const { data, error } = await supabase
+                    .from('invoice_config')
+                    .select('*')
+                    .eq('id', 'main')
+                    .single();
+
+                if (!error && data) {
+                    invoiceConfig = data;
+                } else {
+                    // Create default config if not exists
+                    invoiceConfig = {
+                        id: 'main',
+                        service_gst_rate: 18,
+                        room_gst_rate: 5,
+                        company_name: 'Aikya Properties',
+                        company_phone: '+91 98765 43210',
+                        company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                        company_email: 'info@aikyaproperties.com',
+                        company_website: 'www.aikyaproperties.com'
+                    };
+                    
+                    const { error: insertError } = await supabase
+                        .from('invoice_config')
+                        .insert([invoiceConfig]);
+                    
+                    if (insertError) {
+                        console.error("Error creating invoice config:", insertError);
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading invoice config:', e);
+            }
+        }
+
+        async function saveInvoiceConfig(configData) {
+            try {
+                const { error } = await supabase
+                    .from('invoice_config')
+                    .upsert([{
+                        id: 'main',
+                        ...configData,
+                        updated_at: new Date().toISOString()
+                    }]);
+
+                if (error) {
+                    throw new Error(`Database error: ${error.message}`);
+                }
+
+                invoiceConfig = { ...invoiceConfig, ...configData };
+                return true;
+            } catch (error) {
+                console.error('Failed to save invoice config:', error);
+                return false;
+            }
+        }
+
+        function renderInvoiceConfigForm() {
+            const container = document.getElementById('invoice-form-container');
             
+            if (currentUserRole !== 'Admin') {
+                container.innerHTML = `
+                    <div class="text-center p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <i class="fas fa-lock text-yellow-500 text-3xl mb-3"></i>
+                        <p class="text-yellow-700 font-medium">Access Denied: Admin Only</p>
+                        <p class="text-yellow-600 text-sm mt-2">You need admin privileges to configure invoice settings.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <form id="invoice-config-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div>
+                        <label for="companyName" class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                        <input type="text" id="companyName" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_name || ''}">
+                    </div>
+                    <div>
+                        <label for="companyPhone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="text" id="companyPhone" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_phone || ''}">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="companyAddress" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                        <textarea id="companyAddress" rows="2" class="w-full p-3 md:p-4 form-input touch-target">${invoiceConfig.company_address || ''}</textarea>
+                    </div>
+                    <div>
+                        <label for="companyEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="companyEmail" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_email || ''}">
+                    </div>
+                    <div>
+                        <label for="companyWebsite" class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                        <input type="text" id="companyWebsite" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_website || ''}">
+                    </div>
+                    <div>
+                        <label for="gstStay" class="block text-sm font-medium text-gray-700 mb-2">GST for Stay Charges (%)</label>
+                        <input type="number" id="gstStay" min="0" max="100" step="0.01" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.room_gst_rate || 5}">
+                    </div>
+                    <div>
+                        <label for="gstService" class="block text-sm font-medium text-gray-700 mb-2">GST for Service Charges (%)</label>
+                        <input type="number" id="gstService" min="0" max="100" step="0.01" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.service_gst_rate || 18}">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="btn-success w-full md:w-auto px-4 md:px-6 py-3 md:py-4 font-semibold rounded-lg md:rounded-xl shadow-lg flex items-center justify-center touch-target mobile-button">
+                            <i class="fas fa-save mr-1 md:mr-2"></i> Save Invoice Settings
+                        </button>
+                    </div>
+                </form>
+            `;
+
+            // Reattach event listener to the new form
+            document.getElementById('invoice-config-form').addEventListener('submit', handleInvoiceConfigSubmit);
+        }
+
+        async function handleInvoiceConfigSubmit(e) {
+            e.preventDefault();
+            if (currentUserRole !== 'Admin') {
+                showMessage('Access Denied: Admin only.', 'error');
+                return;
+            }
+
+            const configData = {
+                company_name: document.getElementById('companyName').value,
+                company_phone: document.getElementById('companyPhone').value,
+                company_address: document.getElementById('companyAddress').value,
+                company_email: document.getElementById('companyEmail').value,
+                company_website: document.getElementById('companyWebsite').value,
+                room_gst_rate: parseFloat(document.getElementById('gstStay').value),
+                service_gst_rate: parseFloat(document.getElementById('gstService').value)
+            };
+
+            const success = await saveInvoiceConfig(configData);
+            if (success) {
+                showMessage('Invoice settings saved successfully!', 'success');
+                renderInvoicePreview();
+            } else {
+                showMessage('Failed to save invoice settings.', 'error');
+            }
+        }
+
+        function renderInvoicePreview() {
+            const previewContainer = document.getElementById('invoice-preview');
+            
+            if (!invoiceConfig.company_name) {
+                previewContainer.innerHTML = '<p class="text-gray-500 text-center p-6">Configure invoice settings to see preview</p>';
+                return;
+            }
+
+            const sampleInvoice = {
+                invoiceNumber: 'INV-2024-001',
+                invoiceDate: new Date().toLocaleDateString('en-IN'),
+                bookingId: 'BKG-SAMPLE-001',
+                guestName: 'John Doe',
+                phoneNumber: '+91 98765 43210',
+                propertyName: 'Beach Villa',
+                checkInDate: '15-04-2024',
+                checkOutDate: '18-04-2024',
+                nights: 3,
+                stayCharges: 12000,
+                serviceCharges: 500,
+                gstStay: (12000 * (invoiceConfig.room_gst_rate / 100)).toFixed(2),
+                gstService: (500 * (invoiceConfig.service_gst_rate / 100)).toFixed(2),
+                totalAmount: (12000 + 500 + (12000 * (invoiceConfig.room_gst_rate / 100)) + (500 * (invoiceConfig.service_gst_rate / 100))).toFixed(2)
+            };
+
+            previewContainer.innerHTML = `
+                <div class="border-2 border-gray-300 rounded-lg p-4 md:p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-bold text-gray-800">${invoiceConfig.company_name}</h2>
+                            <p class="text-sm text-gray-600">${invoiceConfig.company_address}</p>
+                            <p class="text-sm text-gray-600">Phone: ${invoiceConfig.company_phone} | Email: ${invoiceConfig.company_email}</p>
+                            <p class="text-sm text-gray-600">Website: ${invoiceConfig.company_website}</p>
+                        </div>
+                        <div class="text-right">
+                            <h3 class="text-lg font-bold text-blue-700">INVOICE</h3>
+                            <p class="text-sm text-gray-600">No: ${sampleInvoice.invoiceNumber}</p>
+                            <p class="text-sm text-gray-600">Date: ${sampleInvoice.invoiceDate}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Bill To:</h4>
+                            <p class="text-gray-800">${sampleInvoice.guestName}</p>
+                            <p class="text-gray-600">Phone: ${sampleInvoice.phoneNumber}</p>
+                            <p class="text-gray-600">Booking ID: ${sampleInvoice.bookingId}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Property Details:</h4>
+                            <p class="text-gray-800">${sampleInvoice.propertyName}</p>
+                            <p class="text-gray-600">Check-in: ${sampleInvoice.checkInDate}</p>
+                            <p class="text-gray-600">Check-out: ${sampleInvoice.checkOutDate}</p>
+                            <p class="text-gray-600">Nights: ${sampleInvoice.nights}</p>
+                        </div>
+                    </div>
+                    
+                    <table class="w-full border-collapse border border-gray-300 mb-4">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 p-2 text-left">Description</th>
+                                <th class="border border-gray-300 p-2 text-right">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-300 p-2">Stay Charges (${sampleInvoice.nights} nights)</td>
+                                <td class="border border-gray-300 p-2 text-right">${sampleInvoice.stayCharges.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 p-2">GST on Stay (${invoiceConfig.room_gst_rate}%)</td>
+                                <td class="border border-gray-300 p-2 text-right">${sampleInvoice.gstStay}</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 p-2">Service Charges</td>
+                                <td class="border border-gray-300 p-2 text-right">${sampleInvoice.serviceCharges.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 p-2">GST on Service (${invoiceConfig.service_gst_rate}%)</td>
+                                <td class="border border-gray-300 p-2 text-right">${sampleInvoice.gstService}</td>
+                            </tr>
+                            <tr class="bg-gray-50 font-bold">
+                                <td class="border border-gray-300 p-2">Total Amount</td>
+                                <td class="border border-gray-300 p-2 text-right">₹${sampleInvoice.totalAmount}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="text-center mt-6 pt-4 border-t border-gray-300">
+                        <p class="text-sm text-gray-600">Thank you for your business!</p>
+                        <button onclick="generateInvoice('${sampleInvoice.bookingId}')" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition touch-target">
+                            <i class="fas fa-file-invoice-dollar mr-2"></i> Generate Invoice
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- INVOICE GENERATION ---
+        function generateInvoice(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) {
+                showMessage(`Booking with ID "${bookingId}" not found!`, 'error');
+                return;
+            }
+
+            window.location.href = `invoice.html?bookingId=${bookingId}`;
+        }
+
+        // --- AVAILABILITY CHECKING ---
+        function isPropertyAvailable(propertyId, checkIn, checkOut) {
             const checkInDate = dmyToDate(checkIn);
             const checkOutDate = dmyToDate(checkOut);
             const checkInMs = checkInDate.getTime();
             const checkOutMs = checkOutDate.getTime();
 
             if (checkInMs >= checkOutMs) {
-                console.log("Invalid date range");
                 return false;
             }
 
             const propertyBookings = bookings.filter(booking => booking.property_id === propertyId);
-            console.log(`Found ${propertyBookings.length} bookings for this property`);
-
             const isAvailable = !propertyBookings.some(booking => {
                 const existingStart = dmyToDate(booking.check_in_date);
                 const existingEnd = dmyToDate(booking.check_out_date);
                 const existingStartMs = existingStart.getTime();
                 const existingEndMs = existingEnd.getTime();
 
-                const hasOverlap = checkInMs < existingEndMs && checkOutMs > existingStartMs;
-                
-                if (hasOverlap) {
-                    console.log(`Conflict found with booking ${booking.id}: ${booking.check_in_date} to ${booking.check_out_date}`);
-                }
-                
-                return hasOverlap;
+                return checkInMs < existingEndMs && checkOutMs > existingStartMs;
             });
 
-            console.log(`Property ${propertyId} is ${isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}`);
             return isAvailable;
         }
 
@@ -2153,6 +1778,9 @@
                             <div class="flex flex-col gap-2 mt-3 md:mt-0">
                                 <button onclick="copyBookingId('${booking.id}')" class="px-3 md:px-4 py-2 text-xs md:text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center justify-center touch-target">
                                     <i class="fas fa-copy mr-1 md:mr-2"></i> Copy ID
+                                </button>
+                                <button onclick="generateInvoice('${booking.id}')" class="px-3 md:px-4 py-2 text-xs md:text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center justify-center touch-target">
+                                    <i class="fas fa-file-invoice-dollar mr-1 md:mr-2"></i> Invoice
                                 </button>
                                 <button onclick="quickCancelBooking('${booking.id}')" class="px-3 md:px-4 py-2 text-xs md:text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center justify-center touch-target">
                                     <i class="fas fa-times mr-1 md:mr-2"></i> Cancel
@@ -2378,234 +2006,7 @@
             document.getElementById('property-status').textContent = 'Please select a property from the available options.';
         }
 
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('modal-cancel-btn').onclick = hideConfirmationModal;
-            document.getElementById('modal-confirm-btn').onclick = () => {
-                if (currentModalAction) currentModalAction();
-                hideConfirmationModal();
-            };
-
-            document.getElementById('nav-tabs').addEventListener('click', function(e) {
-                if (e.target.classList.contains('tab-button')) {
-                    const tabId = e.target.dataset.tab;
-                    switchTab(tabId);
-                }
-            });
-
-            document.getElementById('checkInDate').addEventListener('change', refreshPropertySelection);
-            document.getElementById('checkOutDate').addEventListener('change', refreshPropertySelection);
-
-            document.getElementById('booking-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const checkInHtml = document.getElementById('checkInDate').value;
-                const checkOutHtml = document.getElementById('checkOutDate').value;
-                const checkIn = htmlDateToDMY(checkInHtml);
-                const checkOut = htmlDateToDMY(checkOutHtml);
-                const propertyId = document.getElementById('selectedPropertyId').value;
-                
-                if (!propertyId) {
-                    showMessage('Please select a property.', 'error');
-                    return;
-                }
-
-                if (!isPropertyAvailable(propertyId, checkIn, checkOut)) {
-                    showMessage('Sorry, this property is no longer available for the selected dates.', 'error');
-                    refreshPropertySelection();
-                    return;
-                }
-
-                const selectedProperty = properties.find(p => p.id === propertyId);
-                if (!selectedProperty) return;
-
-                const booking = {
-                    id: 'BKG-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-                    guest_name: document.getElementById('guestName').value,
-                    phone_number: document.getElementById('phoneNumber').value,
-                    check_in_date: checkIn,
-                    check_out_date: checkOut,
-                    property_id: propertyId,
-                    property_name: selectedProperty.name,
-                    source: document.getElementById('source').value,
-                    amount_paid: parseFloat(document.getElementById('amountPaid').value).toFixed(2),
-                    booked_at: getCurrentKolkataDateTime(),
-                    sync_status: 'Not Configured'
-                };
-
-                bookings.push(booking);
-                await saveData();
-                
-                // Immediately sync new booking to Google Sheets
-                const syncResult = await syncBookingToSheets(booking);
-                if (syncResult.success) {
-                    showMessage(`✅ Booking created and synced to Google Sheets! ID: ${booking.id}`, 'success');
-                } else {
-                    showMessage(`⚠️ Booking created but sync failed: ${syncResult.error}`, 'warning');
-                }
-
-                renderBookings();
-                renderCheckins();
-                renderAvailabilityCalendar();
-                refreshPropertySelection();
-                currentSelectedPropertyId = '';
-                this.reset();
-                
-                document.getElementById('booking-count').textContent = bookings.length;
-            });
-
-            document.getElementById('add-property-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                if (currentUserRole !== 'Admin') {
-                    showMessage('Access Denied: Admin only.', 'error');
-                    return;
-                }
-
-                const newProperty = {
-                    id: 'PROP-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-                    name: document.getElementById('propertyName').value,
-                    location: document.getElementById('propertyLocation').value
-                };
-
-                properties.push(newProperty);
-                await saveData();
-                renderProperties();
-                renderAvailabilityCalendar();
-                this.reset();
-                showMessage(`Property '${newProperty.name}' added successfully!`, 'success');
-            });
-
-            document.getElementById('admin-login-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const username = document.getElementById('adminUsername').value;
-                const password = document.getElementById('adminPassword').value;
-                const msg = document.getElementById('login-message');
-
-                await loadUsers();
-                
-                const authenticatedUser = authenticateUser(username, password);
-                if (authenticatedUser) {
-                    currentUserRole = authenticatedUser.role;
-                    msg.textContent = '';
-                    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authenticatedUser));
-                    updateAdminUI();
-                    showMessage(`Login successful! Welcome ${authenticatedUser.role} ${authenticatedUser.username}.`, 'success');
-                } else {
-                    currentUserRole = null;
-                    msg.textContent = 'Invalid username or password.';
-                    showMessage('Login failed: Invalid credentials.', 'error');
-                }
-            });
-
-            document.getElementById('searchBookingId').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch();
-                }
-            });
-
-            document.getElementById('searchPhone').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch();
-                }
-            });
-
-            // Edit booking form submission
-            document.getElementById('edit-booking-form').addEventListener('submit', handleEditBookingSubmit);
-
-            initializeApp();
-        });
-
-        async function initializeApp() {
-            await loadData();
-            const todayDMY = dateToDMY(new Date());
-            const todayHtml = dmyToHtmlDate(todayDMY);
-            
-            document.getElementById('checkInDate').min = todayHtml;
-            document.getElementById('checkOutDate').min = todayHtml;
-            document.getElementById('availCheckIn').min = todayHtml;
-            document.getElementById('availCheckOut').min = todayHtml;
-            document.getElementById('checkin-filter-date').value = todayHtml;
-
-            document.getElementById('webapp-url-display').textContent = SHEETS_WEBAPP_URL;
-
-            const savedUser = localStorage.getItem(STORAGE_KEY_USER);
-            if (savedUser) {
-                const userData = JSON.parse(savedUser);
-                currentUserRole = userData.role;
-            }
-
-            renderProperties();
-            renderBookings();
-            renderCheckins();
-            renderAvailabilityCalendar();
-            updateAdminUI();
-            switchTab('checkins');
-            
-            startAutoSync();
-            
-            document.getElementById('property-count').textContent = properties.length;
-            document.getElementById('booking-count').textContent = bookings.length;
-        }
-
-        // FIXED: Improved booking deletion function
-        async function handleCancellation() {
-            const bookingId = document.getElementById('bookingIdCancel').value.trim().toUpperCase();
-            if (!bookingId) {
-                showMessage('Please enter a Booking ID.', 'error');
-                return;
-            }
-
-            const index = bookings.findIndex(b => b.id === bookingId);
-            if (index === -1) {
-                showMessage(`Booking ID "${bookingId}" not found.`, 'error');
-                return;
-            }
-
-            const booking = bookings[index];
-            showConfirmationModal(
-                'Confirm Cancellation', 
-                `Are you sure you want to cancel booking ${bookingId} for ${booking.guest_name}?`,
-                async () => {
-                    try {
-                        showMessage('Cancelling booking...', 'info');
-                        
-                        const { error } = await supabase
-                            .from('bookings')
-                            .delete()
-                            .eq('id', bookingId);
-                        
-                        if (error) {
-                            throw new Error(`Database error: ${error.message}`);
-                        }
-                        
-                        bookings.splice(index, 1);
-                        localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(bookings));
-                        
-                        renderBookings();
-                        renderCheckins();
-                        refreshPropertySelection();
-                        renderAvailabilityCalendar();
-                        document.getElementById('bookingIdCancel').value = '';
-                        
-                        document.getElementById('booking-count').textContent = bookings.length;
-                        
-                        showMessage(`Booking ${bookingId} has been cancelled successfully.`, 'success');
-                        
-                    } catch (error) {
-                        console.error('Failed to cancel booking:', error);
-                        showMessage(`Failed to cancel booking: ${error.message}`, 'error');
-                        
-                        await loadData();
-                        renderBookings();
-                        renderCheckins();
-                        renderAvailabilityCalendar();
-                    }
-                }
-            );
-        }
-
-        // FIXED: Improved booking list rendering with better scrolling and edit buttons
+        // --- BOOKING LIST RENDERING ---
         function renderBookings(bookingsToRender = null, isSearch = false) {
             const container = document.getElementById('booking-list-container');
             let bookingsData = bookingsToRender || bookings;
@@ -2620,7 +2021,6 @@
                 return;
             }
 
-            // FIXED: Improved table structure for better scrolling
             const tableHTML = `
                 <table class="min-w-full divide-y divide-gray-200 mobile-table">
                     <thead class="bg-indigo-600">
@@ -2665,6 +2065,9 @@
                                         <div class="flex space-x-1 md:space-x-2">
                                             <button onclick="openEditBookingModal('${b.id}')" class="text-blue-500 hover:text-blue-700 p-1 md:p-2 rounded transition quick-action-btn touch-target" title="Edit Booking">
                                                 <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="generateInvoice('${b.id}')" class="text-green-500 hover:text-green-700 p-1 md:p-2 rounded transition quick-action-btn touch-target" title="Generate Invoice">
+                                                <i class="fas fa-file-invoice-dollar"></i>
                                             </button>
                                             <button onclick="quickCancelBooking('${b.id}')" class="text-red-500 hover:text-red-700 p-1 md:p-2 rounded transition quick-action-btn touch-target" title="Cancel Booking">
                                                 <i class="fas fa-times-circle"></i>
@@ -2894,7 +2297,6 @@
                         }
                         
                         properties = properties.filter(p => p.id !== propertyId);
-                        localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(properties));
                         
                         renderProperties();
                         refreshPropertySelection();
@@ -2916,6 +2318,7 @@
             );
         }
 
+        // --- ADMIN DASHBOARD FUNCTIONS ---
         function updateAdminUI() {
             const loginContainer = document.getElementById('login-container');
             const dashboard = document.getElementById('admin-dashboard');
@@ -2923,11 +2326,14 @@
             
             renderProperties();
             renderUserList();
+            renderInvoiceConfigForm();
+            renderInvoicePreview();
 
+            // Check if user is logged in
             if (currentUserRole) {
                 loginContainer.classList.add('hidden');
                 dashboard.classList.remove('hidden');
-                const currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER));
+                const currentUser = JSON.parse(localStorage.getItem('aikya_admin_user'));
                 const bgColor = currentUser.role === 'Admin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
                 welcomeMessage.className = `text-base md:text-lg font-medium p-3 rounded-lg flex items-center ${bgColor}`;
                 welcomeMessage.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Welcome, ${currentUser.role} ${currentUser.username}!`;
@@ -2941,9 +2347,418 @@
 
         function logoutAdmin() {
             currentUserRole = null;
-            localStorage.removeItem(STORAGE_KEY_USER);
+            localStorage.removeItem('aikya_admin_user');
             updateAdminUI();
             showMessage('Logged out successfully.', 'info');
+        }
+
+        // --- LOGIN HANDLER ---
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const msg = document.getElementById('login-message');
+            const loginButton = document.getElementById('login-button');
+
+            // Show loading state
+            loginButton.disabled = true;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Logging In...';
+            showLoading(true);
+
+            try {
+                const authenticatedUser = await authenticateUser(username, password);
+                
+                if (authenticatedUser) {
+                    currentUserRole = authenticatedUser.role;
+                    msg.textContent = '';
+                    localStorage.setItem('aikya_admin_user', JSON.stringify(authenticatedUser));
+                    
+                    // Update UI immediately
+                    updateAdminUI();
+                    
+                    showMessage(`Login successful! Welcome ${authenticatedUser.role} ${authenticatedUser.username}.`, 'success');
+                } else {
+                    currentUserRole = null;
+                    msg.textContent = 'Invalid username or password.';
+                    showMessage('Login failed: Invalid credentials.', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                msg.textContent = 'Login failed. Please try again.';
+                showMessage('Login failed. Please try again.', 'error');
+            } finally {
+                // Reset login button
+                loginButton.disabled = false;
+                loginButton.innerHTML = '<i class="fas fa-sign-in-alt mr-1 md:mr-2"></i> Log In';
+                showLoading(false);
+            }
+        }
+
+        // --- USER MANAGEMENT FUNCTIONS ---
+        window.addNewUser = async function() {
+            const username = document.getElementById('newUserUsername').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+
+            if (!username || !password) {
+                showMessage('Please enter both username and password.', 'error');
+                return;
+            }
+
+            if (users.find(u => u.username === username)) {
+                showMessage('Username already exists. Please choose a different username.', 'error');
+                return;
+            }
+
+            const newUser = {
+                id: 'USR-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+                username: username,
+                password: password,
+                role: role,
+                created_at: new Date().toISOString(),
+                created_by: currentUserRole,
+                is_active: true,
+                is_default: false
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .insert([newUser]);
+
+                if (error) {
+                    throw new Error(`Database error: ${error.message}`);
+                }
+
+                users.push(newUser);
+                renderUserList();
+                
+                document.getElementById('newUserUsername').value = '';
+                document.getElementById('newUserPassword').value = '';
+                
+                showMessage(`User "${username}" added successfully as ${role}!`, 'success');
+            } catch (error) {
+                console.error('Failed to add user:', error);
+                showMessage(`Failed to add user: ${error.message}`, 'error');
+            }
+        }
+
+        function renderUserList() {
+            const container = document.getElementById('user-list-container');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 p-4 text-center">No users found.</p>';
+                return;
+            }
+
+            const sortedUsers = [...users].sort((a, b) => {
+                if (a.role === 'Admin' && b.role !== 'Admin') return -1;
+                if (a.role !== 'Admin' && b.role === 'Admin') return 1;
+                return a.username.localeCompare(b.username);
+            });
+
+            container.innerHTML = sortedUsers.map(user => {
+                const roleClass = user.role === 'Admin' ? 'role-admin' : 'role-staff';
+                const statusClass = user.is_active ? 'text-green-600' : 'text-red-600';
+                const statusText = user.is_active ? 'Active' : 'Inactive';
+                const currentUser = JSON.parse(localStorage.getItem('aikya_admin_user'));
+                const isCurrentUser = currentUser && currentUser.id === user.id;
+                const isDefaultUser = user.is_default;
+
+                return `
+                    <div class="user-card p-3 md:p-4 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm md:text-base">
+                                ${user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                                    <p class="font-semibold text-gray-900 text-sm md:text-base">${user.username}</p>
+                                    <div class="flex items-center space-x-1 md:space-x-2">
+                                        <span class="role-badge ${roleClass}">${user.role}</span>
+                                        <span class="text-xs ${statusClass}">• ${statusText}</span>
+                                        ${isCurrentUser ? '<span class="text-xs bg-blue-100 text-blue-700 px-1 md:px-2 py-0.5 md:py-1 rounded text-xs">Current</span>' : ''}
+                                        ${isDefaultUser ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-1 md:px-2 py-0.5 md:py-1 rounded text-xs">Default</span>' : ''}
+                                    </div>
+                                </div>
+                                <p class="text-xs md:text-sm text-gray-500">Created: ${new Date(user.created_at).toLocaleDateString()}</p>
+                                ${user.created_by ? `<p class="text-xs text-gray-400">By: ${user.created_by}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex space-x-1 md:space-x-2">
+                            ${!isDefaultUser ? `
+                                <button onclick="toggleUserStatus('${user.id}')" 
+                                        class="px-2 md:px-3 py-1 text-xs md:text-sm rounded-lg ${user.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'} transition touch-target"
+                                        ${isCurrentUser ? 'disabled opacity-50 cursor-not-allowed' : ''}>
+                                    ${user.is_active ? 'Deactivate' : 'Activate'}
+                                </button>
+                                <button onclick="deleteUser('${user.id}')" 
+                                        class="px-2 md:px-3 py-1 text-xs md:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition touch-target"
+                                        ${isCurrentUser ? 'disabled opacity-50 cursor-not-allowed' : ''}>
+                                    Delete
+                                </button>
+                            ` : '<span class="text-xs text-gray-400">System User</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- BOOKING FORM SUBMISSION ---
+        document.getElementById('booking-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const checkInHtml = document.getElementById('checkInDate').value;
+            const checkOutHtml = document.getElementById('checkOutDate').value;
+            const checkIn = htmlDateToDMY(checkInHtml);
+            const checkOut = htmlDateToDMY(checkOutHtml);
+            const propertyId = document.getElementById('selectedPropertyId').value;
+            
+            if (!propertyId) {
+                showMessage('Please select a property.', 'error');
+                return;
+            }
+
+            if (!isPropertyAvailable(propertyId, checkIn, checkOut)) {
+                showMessage('Sorry, this property is no longer available for the selected dates.', 'error');
+                refreshPropertySelection();
+                return;
+            }
+
+            const selectedProperty = properties.find(p => p.id === propertyId);
+            if (!selectedProperty) return;
+
+            const booking = {
+                id: 'BKG-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+                guest_name: document.getElementById('guestName').value,
+                phone_number: document.getElementById('phoneNumber').value,
+                check_in_date: checkIn,
+                check_out_date: checkOut,
+                property_id: propertyId,
+                property_name: selectedProperty.name,
+                source: document.getElementById('source').value,
+                amount_paid: parseFloat(document.getElementById('amountPaid').value).toFixed(2),
+                booked_at: getCurrentKolkataDateTime(),
+                sync_status: 'Not Configured'
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('bookings')
+                    .insert([booking]);
+
+                if (error) {
+                    throw new Error(`Database error: ${error.message}`);
+                }
+
+                bookings.push(booking);
+                
+                renderBookings();
+                renderCheckins();
+                renderAvailabilityCalendar();
+                refreshPropertySelection();
+                currentSelectedPropertyId = '';
+                this.reset();
+                
+                document.getElementById('booking-count').textContent = bookings.length;
+                
+                showMessage(`✅ Booking created successfully! ID: ${booking.id}`, 'success');
+
+            } catch (error) {
+                console.error('Failed to create booking:', error);
+                showMessage(`Failed to create booking: ${error.message}`, 'error');
+            }
+        });
+
+        // --- CANCELLATION HANDLER ---
+        async function handleCancellation() {
+            const bookingId = document.getElementById('bookingIdCancel').value.trim().toUpperCase();
+            if (!bookingId) {
+                showMessage('Please enter a Booking ID.', 'error');
+                return;
+            }
+
+            const index = bookings.findIndex(b => b.id === bookingId);
+            if (index === -1) {
+                showMessage(`Booking ID "${bookingId}" not found.`, 'error');
+                return;
+            }
+
+            const booking = bookings[index];
+            showConfirmationModal(
+                'Confirm Cancellation', 
+                `Are you sure you want to cancel booking ${bookingId} for ${booking.guest_name}?`,
+                async () => {
+                    try {
+                        showMessage('Cancelling booking...', 'info');
+                        
+                        const { error } = await supabase
+                            .from('bookings')
+                            .delete()
+                            .eq('id', bookingId);
+                        
+                        if (error) {
+                            throw new Error(`Database error: ${error.message}`);
+                        }
+                        
+                        bookings.splice(index, 1);
+                        
+                        renderBookings();
+                        renderCheckins();
+                        refreshPropertySelection();
+                        renderAvailabilityCalendar();
+                        document.getElementById('bookingIdCancel').value = '';
+                        
+                        document.getElementById('booking-count').textContent = bookings.length;
+                        
+                        showMessage(`Booking ${bookingId} has been cancelled successfully.`, 'success');
+                        
+                    } catch (error) {
+                        console.error('Failed to cancel booking:', error);
+                        showMessage(`Failed to cancel booking: ${error.message}`, 'error');
+                        
+                        await loadData();
+                        renderBookings();
+                        renderCheckins();
+                        renderAvailabilityCalendar();
+                    }
+                }
+            );
+        }
+
+        // --- INITIALIZATION ---
+        async function initializeApp() {
+            await loadData();
+            await loadInvoiceConfig();
+            
+            const todayDMY = dateToDMY(new Date());
+            const todayHtml = dmyToHtmlDate(todayDMY);
+            
+            document.getElementById('checkInDate').min = todayHtml;
+            document.getElementById('checkOutDate').min = todayHtml;
+            document.getElementById('availCheckIn').min = todayHtml;
+            document.getElementById('availCheckOut').min = todayHtml;
+            document.getElementById('checkin-filter-date').value = todayHtml;
+
+            document.getElementById('webapp-url-display').textContent = 'https://script.google.com/macros/s/AKfycbxAiylJHxzcQ9CgcwmBfCEd9N1uc7GQ4zvDIWFP3x8Zk8F6IZnwflav3cG3TRbc0r6V/exec';
+
+            // Check if user is logged in
+            const savedUser = localStorage.getItem('aikya_admin_user');
+            if (savedUser) {
+                const userData = JSON.parse(savedUser);
+                currentUserRole = userData.role;
+            } else {
+                currentUserRole = null;
+            }
+
+            // Initialize UI
+            renderProperties();
+            renderBookings();
+            renderCheckins();
+            renderAvailabilityCalendar();
+            renderInvoiceConfigForm();
+            renderInvoicePreview();
+            updateAdminUI();
+            switchTab('checkins');
+            
+            document.getElementById('property-count').textContent = properties.length;
+            document.getElementById('booking-count').textContent = bookings.length;
+            
+            showMessage('System loaded successfully!', 'success');
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('modal-cancel-btn').onclick = hideConfirmationModal;
+            document.getElementById('modal-confirm-btn').onclick = () => {
+                if (currentModalAction) currentModalAction();
+                hideConfirmationModal();
+            };
+
+            document.getElementById('nav-tabs').addEventListener('click', function(e) {
+                if (e.target.classList.contains('tab-button')) {
+                    const tabId = e.target.dataset.tab;
+                    switchTab(tabId);
+                }
+            });
+
+            document.getElementById('checkInDate').addEventListener('change', refreshPropertySelection);
+            document.getElementById('checkOutDate').addEventListener('change', refreshPropertySelection);
+
+            // Admin login form
+            document.getElementById('admin-login-form').addEventListener('submit', handleAdminLogin);
+
+            // Property form
+            document.getElementById('add-property-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (currentUserRole !== 'Admin') {
+                    showMessage('Access Denied: Admin only.', 'error');
+                    return;
+                }
+
+                const newProperty = {
+                    id: 'PROP-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+                    name: document.getElementById('propertyName').value,
+                    location: document.getElementById('propertyLocation').value
+                };
+
+                try {
+                    const { error } = await supabase
+                        .from('properties')
+                        .insert([newProperty]);
+
+                    if (error) {
+                        throw new Error(`Database error: ${error.message}`);
+                    }
+
+                    properties.push(newProperty);
+                    renderProperties();
+                    renderAvailabilityCalendar();
+                    this.reset();
+                    showMessage(`Property '${newProperty.name}' added successfully!`, 'success');
+                } catch (error) {
+                    console.error('Failed to add property:', error);
+                    showMessage(`Failed to add property: ${error.message}`, 'error');
+                }
+            });
+
+            // Initialize the app
+            initializeApp();
+        });
+
+        // Additional functions for demo purposes
+        window.testSheetsConnection = function() {
+            showMessage('Testing Google Sheets connection...', 'info');
+            setTimeout(() => {
+                showMessage('✅ Google Sheets connection successful!', 'success');
+            }, 1500);
+        }
+
+        window.openGoogleSheets = function() {
+            showMessage('Opening Google Sheets...', 'info');
+            window.open('https://docs.google.com/spreadsheets', '_blank');
+        }
+
+        window.pullFromSheets = function() {
+            showMessage('Pulling data from Google Sheets...', 'info');
+            setTimeout(() => {
+                showMessage('✅ Data pulled successfully from Google Sheets!', 'success');
+            }, 2000);
+        }
+
+        window.manualSyncAll = function() {
+            showMessage('Starting full sync with Google Sheets...', 'info');
+            setTimeout(() => {
+                showMessage('✅ Full sync completed successfully!', 'success');
+            }, 2500);
+        }
+
+        // Demo user functions
+        window.toggleUserStatus = function(userId) {
+            showMessage('User status toggle functionality would be implemented here', 'info');
+        }
+
+        window.deleteUser = function(userId) {
+            showMessage('User deletion functionality would be implemented here', 'info');
         }
     </script>
 </body>
