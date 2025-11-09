@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Invoice - Aikya Property Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .invoice-container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .invoice-header { background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); color: white; }
+        .invoice-table { width: 100%; border-collapse: collapse; }
+        .invoice-table th { background: #f1f5f9; font-weight: 600; }
+        .invoice-table th, .invoice-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        .total-row { background: #f8fafc; font-weight: 600; }
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .invoice-container { box-shadow: none; margin: 0; max-width: 100%; }
+            .invoice-header { background: #4f46e5 !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6 no-print">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 flex items-center">
+                    <div class="bg-gradient-to-br from-indigo-500 to-blue-500 p-2 rounded-xl mr-3">
+                        <i class="fas fa-home text-white"></i>
+                    </div>
+                    <span class="bg-gradient-to-br from-indigo-500 to-blue-500 bg-clip-text text-transparent">Aikya</span> Property Manager
+                </h1>
+                <p class="text-gray-600 mt-1">Professional Invoice Generation</p>
+            </div>
+            <button onclick="window.history.back()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Back
+            </button>
+        </div>
+
+        <!-- Invoice Container -->
+        <div class="invoice-container rounded-lg overflow-hidden">
+            <!-- Invoice Header -->
+            <div class="invoice-header p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div class="mb-4 md:mb-0">
+                        <h2 id="company-name" class="text-2xl md:text-3xl font-bold">Aikya Properties</h2>
+                        <p id="company-address" class="text-blue-100 mt-1">Loading...</p>
+                        <p id="company-contact" class="text-blue-100">Loading...</p>
+                    </div>
+                    <div class="text-right">
+                        <h3 class="text-2xl md:text-3xl font-bold">INVOICE</h3>
+                        <p id="invoice-number" class="text-blue-100 mt-1">Loading...</p>
+                        <p id="invoice-date" class="text-blue-100">Date: Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Body -->
+            <div class="p-6 md:p-8">
+                <!-- Bill To & Property Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-3 text-lg">Bill To:</h4>
+                        <p id="guest-name" class="text-gray-800 font-medium">Loading...</p>
+                        <p id="guest-phone" class="text-gray-600">Phone: Loading...</p>
+                        <p id="booking-id" class="text-gray-600">Booking ID: Loading...</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-3 text-lg">Property Details:</h4>
+                        <p id="property-name" class="text-gray-800 font-medium">Loading...</p>
+                        <p id="stay-dates" class="text-gray-600">Dates: Loading...</p>
+                        <p id="nights-count" class="text-gray-600">Nights: Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Invoice Items Table -->
+                <div class="mb-6 md:mb-8">
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Rate (₹)</th>
+                                <th>Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-items">
+                            <tr><td colspan="4" class="text-center text-gray-500">Loading invoice items...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals -->
+                <div class="flex justify-end">
+                    <div class="w-full md:w-1/2">
+                        <table class="invoice-table">
+                            <tbody>
+                                <tr>
+                                    <td class="font-semibold">Subtotal</td>
+                                    <td id="subtotal-amount" class="text-right">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">GST on Stay (<span id="gst-stay-percent">5</span>%)</td>
+                                    <td id="gst-stay-amount" class="text-right">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">GST on Service (<span id="gst-service-percent">18</span>%)</td>
+                                    <td id="gst-service-amount" class="text-right">₹0.00</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td class="font-bold text-lg">Total Amount</td>
+                                    <td id="total-amount" class="text-right font-bold text-lg">₹0.00</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td class="font-bold text-lg">Amount Paid</td>
+                                    <td id="amount-paid-display" class="text-right font-bold text-lg text-green-600">₹0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">Payment Details:</h4>
+                    <p class="text-gray-600">Amount Paid: <span id="amount-paid" class="font-semibold">₹0.00</span></p>
+                    <p class="text-gray-600">Payment Status: <span id="payment-status" class="font-semibold text-green-600">Paid</span></p>
+                    <p class="text-gray-600 text-sm mt-2">Payment received via <span id="payment-source">Direct</span></p>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-gray-600">Thank you for choosing Aikya Properties!</p>
+                    <p class="text-gray-500 text-sm mt-2" id="company-contact-footer">For any queries, please contact us</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center gap-4 mt-8 no-print">
+            <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+                <i class="fas fa-print mr-2"></i> Print Invoice
+            </button>
+            <button onclick="downloadPDF()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center">
+                <i class="fas fa-download mr-2"></i> Download PDF
+            </button>
+        </div>
+
+        <!-- Status Message -->
+        <div id="status-message" class="mt-4 text-center"></div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://fiqlikvsoqqlcbbtsmwl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWxpa3Zzb3FxbGNiYnRzbXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0OTY5NTgsImV4cCI6MjA3ODA3Mjk1OH0.ESMTiXRhIYnsMJ34XYESHrTyt-U1YtIENXWCDCwWleM';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let invoiceConfig = {};
+        let currentBooking = null;
+
+        // Load invoice configuration from Supabase
+async function loadInvoiceConfig() {
+    try {
+        const { data, error } = await supabase
+            .from('invoice_config')
+            .select('*')
+            .eq('id', 'main')
+            .single();
+
+        if (!error && data) {
+            // Use the GST rates from database, but keep company info as defaults
+            invoiceConfig = {
+                ...data,
+                company_name: 'Aikya Properties',
+                company_phone: '+91 98765 43210',
+                company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                company_email: 'info@aikyaproperties.com',
+                company_website: 'www.aikyaproperties.com'
+            };
+            console.log("Invoice config loaded:", invoiceConfig);
+            return true;
+        } else {
+            console.error('Error loading invoice config:', error);
+            // Set defaults
+            invoiceConfig = {
+                company_name: 'Aikya Properties',
+                company_phone: '+91 98765 43210',
+                company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                company_email: 'info@aikyaproperties.com',
+                company_website: 'www.aikyaproperties.com',
+                room_gst_rate: 5,
+                service_gst_rate: 18
+            };
+            return false;
+        }
+    } catch (e) {
+        console.error('Error loading invoice config:', e);
+        // Set defaults even on error
+        invoiceConfig = {
+            company_name: 'Aikya Properties',
+            company_phone: '+91 98765 43210',
+            company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+            company_email: 'info@aikyaproperties.com',
+            company_website: 'www.aikyaproperties.com',
+            room_gst_rate: 5,
+            service_gst_rate: 18
+        };
+        return false;
+    }
+}
+        
+
+        // Find booking by ID in Supabase
+        async function findBooking(bookingId) {
+            try {
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('*')
+                    .eq('id', bookingId)
+                    .single();
+
+                if (!error && data) {
+                    return data;
+                } else {
+                    console.error('Error finding booking:', error);
+                    return null;
+                }
+            } catch (e) {
+                console.error('Error finding booking:', e);
+                return null;
+            }
+        }
+
+        // Calculate number of nights between two dates
+        function calculateNights(checkIn, checkOut) {
+            const parseDMYDate = (dateString) => {
+                const [day, month, year] = dateString.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            };
+
+            const checkInDate = parseDMYDate(checkIn);
+            const checkOutDate = parseDMYDate(checkOut);
+            const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+            return Math.ceil(timeDiff / (1000 * 3600 * 24));
+        }
+
+        // Format date to readable string
+        function formatDate(dateString) {
+            const parseDMYDate = (dateString) => {
+                const [day, month, year] = dateString.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            };
+
+            const date = parseDMYDate(dateString);
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        // Generate invoice number
+        function generateInvoiceNumber(bookingId) {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+            
+            return `INV-${year}${month}${day}-${random}`;
+        }
+
+        // Calculate invoice amounts - FIXED VERSION
+// Calculate invoice amounts - CORRECTED VERSION
+        function calculateInvoiceAmounts(booking, nights) {
+            const totalAmount = parseFloat(booking.amount_paid);
+            
+            // Fixed service charge (configurable - currently ₹500)
+            const fixedServiceCharge = 500;
+            
+            // Calculate stay charges (total amount minus fixed service charge)
+            const stayCharges = totalAmount - fixedServiceCharge;
+            
+            // Get GST rates with fallbacks
+            const roomGstRate = invoiceConfig.room_gst_rate || 5;
+            const serviceGstRate = invoiceConfig.service_gst_rate || 18;
+            
+            // Calculate GST
+            const gstStay = Math.round(stayCharges * (roomGstRate / 100));
+            const gstService = Math.round(fixedServiceCharge * (serviceGstRate / 100));
+            
+            // Calculate per night rate
+            const perNightRate = Math.round(stayCharges / nights);
+            
+            const subtotal = stayCharges + fixedServiceCharge;
+            const totalWithGST = subtotal + gstStay + gstService;
+            
+            return {
+                stayCharges,
+                serviceCharges: fixedServiceCharge,
+                gstStay,
+                gstService,
+                perNightRate,
+                subtotal,
+                totalWithGST,
+                totalAmount,
+                roomGstRate,
+                serviceGstRate
+            };
+        }
+
+        // Render invoice - FIXED VERSION
+        function renderInvoice() {
+            if (!currentBooking) {
+                showStatus('Booking not found!', 'error');
+                return;
+            }
+
+            // Update company information
+            document.getElementById('company-name').textContent = invoiceConfig.company_name || 'Aikya Properties';
+            document.getElementById('company-address').textContent = invoiceConfig.company_address || 'Loading...';
+            document.getElementById('company-contact').textContent = 
+                `Phone: ${invoiceConfig.company_phone || 'Loading...'} | Email: ${invoiceConfig.company_email || 'Loading...'}`;
+            document.getElementById('company-contact-footer').textContent = 
+                `For any queries, please contact us at ${invoiceConfig.company_phone || ''} or ${invoiceConfig.company_email || ''}`;
+
+            // Update invoice header
+            const invoiceNumber = generateInvoiceNumber(currentBooking.id);
+            document.getElementById('invoice-number').textContent = invoiceNumber;
+            document.getElementById('invoice-date').textContent = `Date: ${new Date().toLocaleDateString('en-IN')}`;
+
+            // Update guest information
+            document.getElementById('guest-name').textContent = currentBooking.guest_name;
+            document.getElementById('guest-phone').textContent = `Phone: ${currentBooking.phone_number || 'Not provided'}`;
+            document.getElementById('booking-id').textContent = `Booking ID: ${currentBooking.id}`;
+
+            // Update property information
+            const nights = calculateNights(currentBooking.check_in_date, currentBooking.check_out_date);
+            
+            document.getElementById('property-name').textContent = currentBooking.property_name;
+            document.getElementById('stay-dates').textContent = 
+                `Dates: ${formatDate(currentBooking.check_in_date)} to ${formatDate(currentBooking.check_out_date)}`;
+            document.getElementById('nights-count').textContent = `Nights: ${nights}`;
+
+             // Calculate amounts
+             const amounts = calculateInvoiceAmounts(currentBooking, nights);
+
+// Update invoice items
+const itemsContainer = document.getElementById('invoice-items');
+itemsContainer.innerHTML = `
+    <tr>
+        <td>Stay Charges (${nights} nights)</td>
+        <td>${nights}</td>
+        <td>₹${amounts.perNightRate.toFixed(2)}</td>
+        <td>₹${amounts.stayCharges.toFixed(2)}</td>
+    </tr>
+    <tr>
+        <td>Service Charges (One-time)</td>
+        <td>1</td>
+        <td>₹${amounts.serviceCharges.toFixed(2)}</td>
+        <td>₹${amounts.serviceCharges.toFixed(2)}</td>
+    </tr>
+`;
+
+// Update totals - REMOVED the duplicate 'const amounts' declaration
+document.getElementById('gst-stay-percent').textContent = amounts.roomGstRate;
+document.getElementById('gst-service-percent').textContent = amounts.serviceGstRate;
+document.getElementById('subtotal-amount').textContent = `₹${amounts.subtotal.toFixed(2)}`;
+document.getElementById('gst-stay-amount').textContent = `₹${amounts.gstStay.toFixed(2)}`;
+document.getElementById('gst-service-amount').textContent = `₹${amounts.gstService.toFixed(2)}`;
+document.getElementById('total-amount').textContent = `₹${amounts.totalWithGST.toFixed(2)}`;
+document.getElementById('amount-paid-display').textContent = `₹${amounts.totalAmount.toFixed(2)}`;
+
+            // Update payment details
+            document.getElementById('amount-paid').textContent = `₹${parseFloat(currentBooking.amount_paid).toFixed(2)}`;
+            document.getElementById('payment-source').textContent = currentBooking.source;
+        }
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            
+            if (type === 'error') {
+                statusEl.className = 'mt-4 text-center text-red-600 font-medium';
+            } else if (type === 'success') {
+                statusEl.className = 'mt-4 text-center text-green-600 font-medium';
+            } else {
+                statusEl.className = 'mt-4 text-center text-blue-600 font-medium';
+            }
+        }
+
+        // Download PDF (simulated)
+        function downloadPDF() {
+            showStatus('Preparing PDF download...', 'info');
+            
+            // Simulate PDF download
+            setTimeout(() => {
+                showStatus('PDF download started!', 'success');
+                
+                // Create a temporary link to trigger download
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = `invoice-${currentBooking.id}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }, 1500);
+        }
+
+        // Get URL parameter
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Initialize the invoice page
+        async function initInvoicePage() {
+            showStatus('Loading invoice data...', 'info');
+            
+            // Load invoice configuration
+            await loadInvoiceConfig();
+            
+            const bookingId = getUrlParameter('bookingId');
+            if (!bookingId) {
+                showStatus('No booking ID provided. Please go back and select a booking.', 'error');
+                return;
+            }
+            
+            // Find booking in Supabase
+            currentBooking = await findBooking(bookingId);
+            if (!currentBooking) {
+                showStatus(`Booking with ID "${bookingId}" not found.`, 'error');
+                return;
+            }
+            
+            renderInvoice();
+            showStatus('Invoice generated successfully!', 'success');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initInvoicePage);
+    </script>
+</body>
+</html>
