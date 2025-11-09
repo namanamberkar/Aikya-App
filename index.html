@@ -1152,6 +1152,73 @@
             </div>
         </div>
 
+        <!-- Edit Booking Modal -->
+        <div id="edit-booking-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right">
+            <div class="glass-card p-4 md:p-6 rounded-lg md:rounded-2xl shadow-2xl max-w-2xl w-full mx-4 transform transition-all border max-h-[90vh] overflow-y-auto">
+                <h3 class="mobile-text-lg md:text-xl font-bold mb-3 md:mb-4 text-gray-900 flex items-center">
+                    <i class="fas fa-edit text-indigo-500 mr-2"></i>
+                    Edit Booking
+                </h3>
+                <form id="edit-booking-form" class="space-y-4 md:space-y-6">
+                    <input type="hidden" id="edit-booking-id">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        <div>
+                            <label for="edit-guest-name" class="block text-sm font-medium text-gray-700 mb-2">Guest Name</label>
+                            <input type="text" id="edit-guest-name" required class="w-full p-3 md:p-4 form-input touch-target">
+                        </div>
+                        
+                        <div>
+                            <label for="edit-phone-number" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                            <input type="tel" id="edit-phone-number" class="w-full p-3 md:p-4 form-input touch-target">
+                        </div>
+                        
+                        <div>
+                            <label for="edit-check-in" class="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
+                            <input type="date" id="edit-check-in" required class="w-full p-3 md:p-4 form-input touch-target">
+                        </div>
+                        
+                        <div>
+                            <label for="edit-check-out" class="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
+                            <input type="date" id="edit-check-out" required class="w-full p-3 md:p-4 form-input touch-target">
+                        </div>
+                        
+                        <div>
+                            <label for="edit-property" class="block text-sm font-medium text-gray-700 mb-2">Property</label>
+                            <select id="edit-property" required class="w-full p-3 md:p-4 form-input bg-white touch-target">
+                                <!-- Properties will be populated here -->
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-source" class="block text-sm font-medium text-gray-700 mb-2">Source</label>
+                            <select id="edit-source" required class="w-full p-3 md:p-4 form-input bg-white touch-target">
+                                <option value="Direct">Direct</option>
+                                <option value="Airbnb">Airbnb</option>
+                                <option value="Booking.com">Booking.com</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-amount-paid" class="block text-sm font-medium text-gray-700 mb-2">Amount Paid (₹)</label>
+                            <input type="number" id="edit-amount-paid" required min="0" step="0.01" class="w-full p-3 md:p-4 form-input touch-target">
+                        </div>
+                        
+                        <div>
+                            <label for="edit-sync-status" class="block text-sm font-medium text-gray-700 mb-2">Sync Status</label>
+                            <input type="text" id="edit-sync-status" readonly class="w-full p-3 md:p-4 form-input bg-gray-100 touch-target">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 md:mt-8 flex justify-end space-x-2 md:space-x-3">
+                        <button type="button" onclick="closeEditModal()" class="px-3 md:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition touch-target">Cancel</button>
+                        <button type="submit" class="btn-primary px-3 md:px-4 py-2 text-sm font-medium rounded-lg touch-target">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Loading Overlay -->
         <div id="loading-overlay" class="loading-overlay hidden">
             <div class="loading-spinner"></div>
@@ -2504,6 +2571,139 @@
             }).join('');
         }
 
+        // --- BOOKING EDITING FUNCTIONS ---
+        window.openEditBookingModal = function(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) {
+                showMessage('Booking not found!', 'error');
+                return;
+            }
+
+            // Populate the form with booking data
+            document.getElementById('edit-booking-id').value = booking.id;
+            document.getElementById('edit-guest-name').value = booking.guest_name;
+            document.getElementById('edit-phone-number').value = booking.phone_number || '';
+            document.getElementById('edit-check-in').value = dmyToHtmlDate(booking.check_in_date);
+            document.getElementById('edit-check-out').value = dmyToHtmlDate(booking.check_out_date);
+            document.getElementById('edit-amount-paid').value = booking.amount_paid;
+            document.getElementById('edit-sync-status').value = booking.sync_status || 'Not Configured';
+
+            // Populate property dropdown
+            const propertySelect = document.getElementById('edit-property');
+            propertySelect.innerHTML = properties.map(prop => 
+                `<option value="${prop.id}" ${prop.id === booking.property_id ? 'selected' : ''}>${prop.name} - ${prop.location}</option>`
+            ).join('');
+
+            // Set source
+            document.getElementById('edit-source').value = booking.source;
+
+            // Show the modal
+            document.getElementById('edit-booking-modal').classList.remove('hidden');
+        }
+
+        window.closeEditModal = function() {
+            document.getElementById('edit-booking-modal').classList.add('hidden');
+        }
+
+        async function handleEditBookingSubmit(e) {
+            e.preventDefault();
+            
+            const bookingId = document.getElementById('edit-booking-id').value;
+            const guestName = document.getElementById('edit-guest-name').value;
+            const phoneNumber = document.getElementById('edit-phone-number').value;
+            const checkIn = htmlDateToDMY(document.getElementById('edit-check-in').value);
+            const checkOut = htmlDateToDMY(document.getElementById('edit-check-out').value);
+            const propertyId = document.getElementById('edit-property').value;
+            const source = document.getElementById('edit-source').value;
+            const amountPaid = document.getElementById('edit-amount-paid').value;
+
+            // Find the booking
+            const bookingIndex = bookings.findIndex(b => b.id === bookingId);
+            if (bookingIndex === -1) {
+                showMessage('Booking not found!', 'error');
+                return;
+            }
+
+            const originalBooking = bookings[bookingIndex];
+            const selectedProperty = properties.find(p => p.id === propertyId);
+            
+            // Check if the new dates conflict with other bookings (excluding the current booking)
+            const hasConflict = bookings.some(b => 
+                b.id !== bookingId && 
+                b.property_id === propertyId &&
+                isDateRangeOverlapping(
+                    checkIn, checkOut, 
+                    b.check_in_date, b.check_out_date
+                )
+            );
+
+            if (hasConflict) {
+                showMessage('The selected dates conflict with an existing booking for this property!', 'error');
+                return;
+            }
+
+            // Update the booking - REMOVED the pending status update
+            const updatedBooking = {
+                ...originalBooking,
+                guest_name: guestName,
+                phone_number: phoneNumber,
+                check_in_date: checkIn,
+                check_out_date: checkOut,
+                property_id: propertyId,
+                property_name: selectedProperty.name,
+                source: source,
+                amount_paid: amountPaid
+                // Removed sync_status: 'Pending Update' to prevent status change
+            };
+
+            try {
+                // Update in Supabase
+                const { error } = await supabase
+                    .from('bookings')
+                    .update({
+                        guest_name: updatedBooking.guest_name,
+                        phone_number: updatedBooking.phone_number,
+                        check_in_date: updatedBooking.check_in_date,
+                        check_out_date: updatedBooking.check_out_date,
+                        property_id: updatedBooking.property_id,
+                        property_name: updatedBooking.property_name,
+                        source: updatedBooking.source,
+                        amount_paid: updatedBooking.amount_paid
+                        // Removed sync_status update
+                    })
+                    .eq('id', bookingId);
+
+                if (error) {
+                    throw new Error(`Database error: ${error.message}`);
+                }
+
+                // Update local data
+                bookings[bookingIndex] = updatedBooking;
+
+                // Close modal and refresh UI
+                closeEditModal();
+                renderBookings();
+                renderCheckins();
+                renderAvailabilityCalendar();
+                
+                showMessage(`Booking ${bookingId} updated successfully!`, 'success');
+
+            } catch (error) {
+                console.error('Failed to update booking:', error);
+                showMessage(`Failed to update booking: ${error.message}`, 'error');
+            }
+        }
+
+        // Helper function to check date range overlap
+        function isDateRangeOverlapping(start1, end1, start2, end2) {
+            const start1Date = dmyToDate(start1);
+            const end1Date = dmyToDate(end1);
+            const start2Date = dmyToDate(start2);
+            const end2Date = dmyToDate(end2);
+
+            return start1Date < end2Date && end1Date > start2Date;
+        }
+
         // --- BOOKING FORM SUBMISSION ---
         document.getElementById('booking-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -2720,6 +2920,9 @@
                     showMessage(`Failed to add property: ${error.message}`, 'error');
                 }
             });
+
+            // Edit booking form
+            document.getElementById('edit-booking-form').addEventListener('submit', handleEditBookingSubmit);
 
             // Initialize the app
             initializeApp();
