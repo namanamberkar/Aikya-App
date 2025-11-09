@@ -1237,7 +1237,17 @@
         let properties = [];
         let bookings = [];
         let users = [];
-        let invoiceConfig = {};
+        let invoiceConfig = {
+            id: 'main',
+            service_gst_rate: 18,
+            room_gst_rate: 5,
+            service_charge: 0,
+            company_name: 'Aikya Properties',
+            company_phone: '+91 98765 43210',
+            company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+            company_email: 'info@aikyaproperties.com',
+            company_website: 'www.aikyaproperties.com'
+        };
         let currentUserRole = null;
         let currentSelectedPropertyId = '';
         let currentCalendarDate = new Date();
@@ -1414,148 +1424,87 @@
                 }
 
                 // Load invoice config
-                const { data: invoiceConfigData, error: invoiceConfigError } = await supabase
-                    .from('invoice_config')
-                    .select('*')
-                    .eq('id', 'main')
-                    .single();
-                
-                if (!invoiceConfigError && invoiceConfigData) {
-                    invoiceConfig = invoiceConfigData;
-                    console.log("Invoice config loaded:", invoiceConfig);
-                } else {
-                    console.error("Error loading invoice config:", invoiceConfigError);
-                    // Set default invoice config
-                    invoiceConfig = {
-                        id: 'main',
-                        service_gst_rate: 18,
-                        room_gst_rate: 5,
-                        company_name: 'Aikya Properties',
-                        company_phone: '+91 98765 43210',
-                        company_address: '123 Property Street, Bangalore, Karnataka - 560001',
-                        company_email: 'info@aikyaproperties.com',
-                        company_website: 'www.aikyaproperties.com'
-                    };
-                }
+                await loadInvoiceConfig();
 
             } catch (e) {
                 console.error("Supabase load failed:", e);
             }
         }
 
-        // --- USER AUTHENTICATION ---
-        async function authenticateUser(username, password) {
-            try {
-                console.log("Authenticating user:", username);
-                
-                const { data: userData, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .eq('is_active', true)
-                    .single();
-
-                if (error) {
-                    console.error("Authentication error:", error);
-                    return null;
-                }
-
-                if (userData) {
-                    console.log("User authenticated:", userData);
-                    return {
-                        id: userData.id,
-                        username: userData.username,
-                        role: userData.role
-                    };
-                }
-
-                return null;
-            } catch (e) {
-                console.error("Authentication failed:", e);
-                return null;
-            }
-        }
-
         // --- INVOICE CONFIGURATION ---
         async function loadInvoiceConfig() {
-    try {
-        const { data, error } = await supabase
-            .from('invoice_config')
-            .select('*')
-            .eq('id', 'main')
-            .single();
+            try {
+                const { data, error } = await supabase
+                    .from('invoice_config')
+                    .select('*')
+                    .eq('id', 'main')
+                    .single();
 
-        if (!error && data) {
-            invoiceConfig = {
-                ...data,
-                // Add default values for the UI fields that aren't in the database
-                company_name: data.company_name || 'Aikya Properties',
-                company_phone: data.company_phone || '+91 98765 43210',
-                company_address: data.company_address || '123 Property Street, Bangalore, Karnataka - 560001',
-                company_email: data.company_email || 'info@aikyaproperties.com',
-                company_website: data.company_website || 'www.aikyaproperties.com'
-            };
-            console.log("Invoice config loaded:", invoiceConfig);
-        } else {
-            console.error("Error loading invoice config:", error);
-            // Set default invoice config
-            invoiceConfig = {
-                id: 'main',
-                service_gst_rate: 18,
-                room_gst_rate: 5,
-                company_name: 'Aikya Properties',
-                company_phone: '+91 98765 43210',
-                company_address: '123 Property Street, Bangalore, Karnataka - 560001',
-                company_email: 'info@aikyaproperties.com',
-                company_website: 'www.aikyaproperties.com'
-            };
-            
-            const { error: insertError } = await supabase
-                .from('invoice_config')
-                .insert([{
-                    id: 'main',
-                    service_gst_rate: 18,
-                    room_gst_rate: 5
-                }]);
-            
-            if (insertError) {
-                console.error("Error creating invoice config:", insertError);
+                if (!error && data) {
+                    // Update only the fields that exist in the database
+                    invoiceConfig.id = data.id;
+                    invoiceConfig.service_gst_rate = data.service_gst_rate || 18;
+                    invoiceConfig.room_gst_rate = data.room_gst_rate || 5;
+                    invoiceConfig.service_charge = data.service_charge || 0;
+                    invoiceConfig.updated_at = data.updated_at;
+                    
+                    console.log("Invoice config loaded from database:", invoiceConfig);
+                } else {
+                    console.error("Error loading invoice config:", error);
+                    // Use default values
+                    console.log("Using default invoice config");
+                }
+            } catch (e) {
+                console.error('Error loading invoice config:', e);
             }
         }
-    } catch (e) {
-        console.error('Error loading invoice config:', e);
-    }
-}
 
         async function saveInvoiceConfig(configData) {
-    try {
-        // Only save the fields that actually exist in your invoice_config table
-        const saveData = {
-            id: 'main',
-            service_gst_rate: parseFloat(configData.service_gst_rate),
-            room_gst_rate: parseFloat(configData.room_gst_rate),
-            updated_at: new Date().toISOString()
-        };
+            try {
+                console.log("Saving invoice config:", configData);
+                
+                // Prepare data for database - only include fields that exist in the table
+                const saveData = {
+                    id: 'main',
+                    service_gst_rate: parseFloat(configData.service_gst_rate) || 18,
+                    room_gst_rate: parseFloat(configData.room_gst_rate) || 5,
+                    service_charge: parseFloat(configData.service_charge) || 0,
+                    updated_at: new Date().toISOString()
+                };
 
-        const { error } = await supabase
-            .from('invoice_config')
-            .upsert([saveData]);
+                console.log("Final data to save:", saveData);
 
-        if (error) {
-            throw new Error(`Database error: ${error.message}`);
+                const { error } = await supabase
+                    .from('invoice_config')
+                    .upsert([saveData]);
+
+                if (error) {
+                    console.error("Supabase error:", error);
+                    throw new Error(`Database error: ${error.message}`);
+                }
+
+                // Update local config with the saved data
+                invoiceConfig.service_gst_rate = saveData.service_gst_rate;
+                invoiceConfig.room_gst_rate = saveData.room_gst_rate;
+                invoiceConfig.service_charge = saveData.service_charge;
+                invoiceConfig.updated_at = saveData.updated_at;
+                
+                // Also update the company info in local config (even though it's not saved to DB)
+                invoiceConfig.company_name = configData.company_name;
+                invoiceConfig.company_phone = configData.company_phone;
+                invoiceConfig.company_address = configData.company_address;
+                invoiceConfig.company_email = configData.company_email;
+                invoiceConfig.company_website = configData.company_website;
+                
+                console.log("Invoice config saved successfully");
+                console.log("Updated local config:", invoiceConfig);
+                
+                return true;
+            } catch (error) {
+                console.error('Failed to save invoice config:', error);
+                return false;
+            }
         }
-
-        // Update local config with only the saved fields
-        invoiceConfig.service_gst_rate = saveData.service_gst_rate;
-        invoiceConfig.room_gst_rate = saveData.room_gst_rate;
-        
-        return true;
-    } catch (error) {
-        console.error('Failed to save invoice config:', error);
-        return false;
-    }
-}
 
         function renderInvoiceConfigForm() {
             const container = document.getElementById('invoice-form-container');
@@ -1594,6 +1543,10 @@
                         <input type="text" id="companyWebsite" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_website || ''}">
                     </div>
                     <div>
+                        <label for="serviceCharge" class="block text-sm font-medium text-gray-700 mb-2">Service Charge (₹)</label>
+                        <input type="number" id="serviceCharge" min="0" step="0.01" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.service_charge || 0}">
+                    </div>
+                    <div>
                         <label for="gstStay" class="block text-sm font-medium text-gray-700 mb-2">GST for Stay Charges (%)</label>
                         <input type="number" id="gstStay" min="0" max="100" step="0.01" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.room_gst_rate || 5}">
                     </div>
@@ -1610,11 +1563,17 @@
             `;
 
             // Reattach event listener to the new form
-            document.getElementById('invoice-config-form').addEventListener('submit', handleInvoiceConfigSubmit);
+            const form = document.getElementById('invoice-config-form');
+            if (form) {
+                form.removeEventListener('submit', handleInvoiceConfigSubmit);
+                form.addEventListener('submit', handleInvoiceConfigSubmit);
+            }
         }
 
         async function handleInvoiceConfigSubmit(e) {
             e.preventDefault();
+            console.log("Invoice config form submitted");
+            
             if (currentUserRole !== 'Admin') {
                 showMessage('Access Denied: Admin only.', 'error');
                 return;
@@ -1626,26 +1585,31 @@
                 company_address: document.getElementById('companyAddress').value,
                 company_email: document.getElementById('companyEmail').value,
                 company_website: document.getElementById('companyWebsite').value,
-                room_gst_rate: parseFloat(document.getElementById('gstStay').value),
-                service_gst_rate: parseFloat(document.getElementById('gstService').value)
+                service_charge: parseFloat(document.getElementById('serviceCharge').value) || 0,
+                room_gst_rate: parseFloat(document.getElementById('gstStay').value) || 5,
+                service_gst_rate: parseFloat(document.getElementById('gstService').value) || 18
             };
 
+            console.log("Config data to save:", configData);
+
+            showLoading(true);
             const success = await saveInvoiceConfig(configData);
+            showLoading(false);
+            
             if (success) {
                 showMessage('Invoice settings saved successfully!', 'success');
                 renderInvoicePreview();
             } else {
-                showMessage('Failed to save invoice settings.', 'error');
+                showMessage('Failed to save invoice settings. Please check console for details.', 'error');
             }
         }
 
         function renderInvoicePreview() {
             const previewContainer = document.getElementById('invoice-preview');
             
-            if (!invoiceConfig.company_name) {
-                previewContainer.innerHTML = '<p class="text-gray-500 text-center p-6">Configure invoice settings to see preview</p>';
-                return;
-            }
+            const serviceCharge = parseFloat(invoiceConfig.service_charge) || 0;
+            const serviceGstRate = parseFloat(invoiceConfig.service_gst_rate) || 18;
+            const roomGstRate = parseFloat(invoiceConfig.room_gst_rate) || 5;
 
             const sampleInvoice = {
                 invoiceNumber: 'INV-2024-001',
@@ -1658,10 +1622,10 @@
                 checkOutDate: '18-04-2024',
                 nights: 3,
                 stayCharges: 12000,
-                serviceCharges: 500,
-                gstStay: (12000 * (invoiceConfig.room_gst_rate / 100)).toFixed(2),
-                gstService: (500 * (invoiceConfig.service_gst_rate / 100)).toFixed(2),
-                totalAmount: (12000 + 500 + (12000 * (invoiceConfig.room_gst_rate / 100)) + (500 * (invoiceConfig.service_gst_rate / 100))).toFixed(2)
+                serviceCharges: serviceCharge,
+                gstStay: (12000 * (roomGstRate / 100)).toFixed(2),
+                gstService: (serviceCharge * (serviceGstRate / 100)).toFixed(2),
+                totalAmount: (12000 + serviceCharge + (12000 * (roomGstRate / 100)) + (serviceCharge * (serviceGstRate / 100))).toFixed(2)
             };
 
             previewContainer.innerHTML = `
@@ -1709,7 +1673,7 @@
                                 <td class="border border-gray-300 p-2 text-right">${sampleInvoice.stayCharges.toFixed(2)}</td>
                             </tr>
                             <tr>
-                                <td class="border border-gray-300 p-2">GST on Stay (${invoiceConfig.room_gst_rate}%)</td>
+                                <td class="border border-gray-300 p-2">GST on Stay (${roomGstRate}%)</td>
                                 <td class="border border-gray-300 p-2 text-right">${sampleInvoice.gstStay}</td>
                             </tr>
                             <tr>
@@ -1717,7 +1681,7 @@
                                 <td class="border border-gray-300 p-2 text-right">${sampleInvoice.serviceCharges.toFixed(2)}</td>
                             </tr>
                             <tr>
-                                <td class="border border-gray-300 p-2">GST on Service (${invoiceConfig.service_gst_rate}%)</td>
+                                <td class="border border-gray-300 p-2">GST on Service (${serviceGstRate}%)</td>
                                 <td class="border border-gray-300 p-2 text-right">${sampleInvoice.gstService}</td>
                             </tr>
                             <tr class="bg-gray-50 font-bold">
@@ -1735,17 +1699,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        // --- INVOICE GENERATION ---
-        function generateInvoice(bookingId) {
-            const booking = bookings.find(b => b.id === bookingId);
-            if (!booking) {
-                showMessage(`Booking with ID "${bookingId}" not found!`, 'error');
-                return;
-            }
-
-            window.location.href = `invoice.html?bookingId=${bookingId}`;
         }
 
         // --- AVAILABILITY CHECKING ---
@@ -2482,6 +2435,40 @@
             }
         }
 
+        // --- USER AUTHENTICATION ---
+        async function authenticateUser(username, password) {
+            try {
+                console.log("Authenticating user:", username);
+                
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .eq('is_active', true)
+                    .single();
+
+                if (error) {
+                    console.error("Authentication error:", error);
+                    return null;
+                }
+
+                if (userData) {
+                    console.log("User authenticated:", userData);
+                    return {
+                        id: userData.id,
+                        username: userData.username,
+                        role: userData.role
+                    };
+                }
+
+                return null;
+            } catch (e) {
+                console.error("Authentication failed:", e);
+                return null;
+            }
+        }
+
         // --- USER MANAGEMENT FUNCTIONS ---
         window.addNewUser = async function() {
             const username = document.getElementById('newUserUsername').value.trim();
@@ -2849,7 +2836,6 @@
         // --- INITIALIZATION ---
         async function initializeApp() {
             await loadData();
-            await loadInvoiceConfig();
             
             const todayDMY = dateToDMY(new Date());
             const todayHtml = dmyToHtmlDate(todayDMY);
