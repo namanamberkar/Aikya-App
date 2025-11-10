@@ -2835,18 +2835,9 @@
 
         // --- INVOICE GENERATION FUNCTION ---
         window.generateInvoice = function(bookingId) {
-            // Switch to invoice configuration tab
-            switchTab('invoice-config');
-            
-            // Show message about the booking
-            const booking = bookings.find(b => b.id === bookingId);
-            if (booking) {
-                showMessage(`Invoice generation for booking ${bookingId}. Configure invoice settings and use the Generate Invoice button.`, 'info');
-            } else {
-                showMessage(`Booking ${bookingId} not found.`, 'error');
-            }
-        }
-
+    // Redirect to invoice.html page with booking ID as parameter
+    window.location.href = `invoice.html?bookingId=${bookingId}`;
+}
         // --- INITIALIZATION ---
         async function initializeApp() {
             await loadData();
