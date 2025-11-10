@@ -1309,6 +1309,11 @@
             
             const tabContent = document.getElementById(`tab-${tabId}`);
             if (tabContent) tabContent.classList.remove('hidden');
+            
+            // Refresh invoice config when that tab is opened
+            if (tabId === 'invoice-config') {
+                refreshInvoiceConfigTab();
+            }
         }
 
         let currentModalAction = null;
@@ -1441,21 +1446,47 @@
                     .single();
 
                 if (!error && data) {
-                    // Update only the fields that exist in the database
-                    invoiceConfig.id = data.id;
-                    invoiceConfig.service_gst_rate = data.service_gst_rate || 18;
-                    invoiceConfig.room_gst_rate = data.room_gst_rate || 5;
-                    invoiceConfig.service_charge = data.service_charge || 0;
-                    invoiceConfig.updated_at = data.updated_at;
-                    
+                    // Update all fields from database
+                    invoiceConfig = {
+                        ...invoiceConfig, // Keep defaults as fallback
+                        ...data // Override with database values
+                    };
                     console.log("Invoice config loaded from database:", invoiceConfig);
                 } else {
                     console.error("Error loading invoice config:", error);
-                    // Use default values
                     console.log("Using default invoice config");
+                    // If no config exists, create a default one in database
+                    await createDefaultInvoiceConfig();
                 }
             } catch (e) {
                 console.error('Error loading invoice config:', e);
+            }
+        }
+
+        async function createDefaultInvoiceConfig() {
+            try {
+                const { error } = await supabase
+                    .from('invoice_config')
+                    .upsert([{
+                        id: 'main',
+                        service_gst_rate: 18,
+                        room_gst_rate: 5,
+                        service_charge: 0,
+                        company_name: 'Aikya Properties',
+                        company_phone: '+91 98765 43210',
+                        company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                        company_email: 'info@aikyaproperties.com',
+                        company_website: 'www.aikyaproperties.com',
+                        updated_at: new Date().toISOString()
+                    }]);
+
+                if (error) {
+                    console.error("Error creating default invoice config:", error);
+                } else {
+                    console.log("Default invoice config created in database");
+                }
+            } catch (e) {
+                console.error('Error creating default invoice config:', e);
             }
         }
 
@@ -1463,12 +1494,17 @@
             try {
                 console.log("Saving invoice config:", configData);
                 
-                // Prepare data for database - only include fields that exist in the table
+                // Prepare complete data for database
                 const saveData = {
                     id: 'main',
                     service_gst_rate: parseFloat(configData.service_gst_rate) || 18,
                     room_gst_rate: parseFloat(configData.room_gst_rate) || 5,
                     service_charge: parseFloat(configData.service_charge) || 0,
+                    company_name: configData.company_name || 'Aikya Properties',
+                    company_phone: configData.company_phone || '+91 98765 43210',
+                    company_address: configData.company_address || '123 Property Street, Bangalore, Karnataka - 560001',
+                    company_email: configData.company_email || 'info@aikyaproperties.com',
+                    company_website: configData.company_website || 'www.aikyaproperties.com',
                     updated_at: new Date().toISOString()
                 };
 
@@ -1484,17 +1520,7 @@
                 }
 
                 // Update local config with the saved data
-                invoiceConfig.service_gst_rate = saveData.service_gst_rate;
-                invoiceConfig.room_gst_rate = saveData.room_gst_rate;
-                invoiceConfig.service_charge = saveData.service_charge;
-                invoiceConfig.updated_at = saveData.updated_at;
-                
-                // Also update the company info in local config (even though it's not saved to DB)
-                invoiceConfig.company_name = configData.company_name;
-                invoiceConfig.company_phone = configData.company_phone;
-                invoiceConfig.company_address = configData.company_address;
-                invoiceConfig.company_email = configData.company_email;
-                invoiceConfig.company_website = configData.company_website;
+                invoiceConfig = saveData;
                 
                 console.log("Invoice config saved successfully");
                 console.log("Updated local config:", invoiceConfig);
@@ -1524,23 +1550,23 @@
                 <form id="invoice-config-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div>
                         <label for="companyName" class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
-                        <input type="text" id="companyName" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_name || ''}">
+                        <input type="text" id="companyName" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_name || 'Aikya Properties'}">
                     </div>
                     <div>
                         <label for="companyPhone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                        <input type="text" id="companyPhone" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_phone || ''}">
+                        <input type="text" id="companyPhone" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_phone || '+91 98765 43210'}">
                     </div>
                     <div class="md:col-span-2">
                         <label for="companyAddress" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                        <textarea id="companyAddress" rows="2" class="w-full p-3 md:p-4 form-input touch-target">${invoiceConfig.company_address || ''}</textarea>
+                        <textarea id="companyAddress" rows="2" class="w-full p-3 md:p-4 form-input touch-target">${invoiceConfig.company_address || '123 Property Street, Bangalore, Karnataka - 560001'}</textarea>
                     </div>
                     <div>
                         <label for="companyEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email" id="companyEmail" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_email || ''}">
+                        <input type="email" id="companyEmail" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_email || 'info@aikyaproperties.com'}">
                     </div>
                     <div>
                         <label for="companyWebsite" class="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                        <input type="text" id="companyWebsite" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_website || ''}">
+                        <input type="text" id="companyWebsite" class="w-full p-3 md:p-4 form-input touch-target" value="${invoiceConfig.company_website || 'www.aikyaproperties.com'}">
                     </div>
                     <div>
                         <label for="serviceCharge" class="block text-sm font-medium text-gray-700 mb-2">Service Charge (₹)</label>
@@ -1699,6 +1725,11 @@
                     </div>
                 </div>
             `;
+        }
+
+        function refreshInvoiceConfigTab() {
+            renderInvoiceConfigForm();
+            renderInvoicePreview();
         }
 
         // --- AVAILABILITY CHECKING ---
@@ -2835,9 +2866,10 @@
 
         // --- INVOICE GENERATION FUNCTION ---
         window.generateInvoice = function(bookingId) {
-    // Redirect to invoice.html page with booking ID as parameter
-    window.location.href = `invoice.html?bookingId=${bookingId}`;
-}
+            // Redirect to invoice.html page with booking ID as parameter
+            window.location.href = `invoice.html?bookingId=${bookingId}`;
+        }
+
         // --- INITIALIZATION ---
         async function initializeApp() {
             await loadData();
