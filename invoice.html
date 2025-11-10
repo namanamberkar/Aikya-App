@@ -8,118 +8,294 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
-        .invoice-container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        .invoice-header { background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); color: white; }
-        .invoice-table { width: 100%; border-collapse: collapse; }
-        .invoice-table th { background: #f1f5f9; font-weight: 600; }
-        .invoice-table th, .invoice-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
-        .total-row { background: #f8fafc; font-weight: 600; }
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #0ea5e9;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #f8fafc; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .invoice-container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .invoice-header { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); 
+            color: white; 
+        }
+        
+        .invoice-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 14px;
+        }
+        
+        .invoice-table th { 
+            background: #f1f5f9; 
+            font-weight: 600; 
+            font-size: 12px;
+        }
+        
+        .invoice-table th, .invoice-table td { 
+            border: 1px solid #e2e8f0; 
+            padding: 8px 12px; 
+            text-align: left; 
+        }
+        
+        .total-row { 
+            background: #f8fafc; 
+            font-weight: 600; 
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+                background: white;
+            }
+            
+            .invoice-container {
+                box-shadow: none;
+                border-radius: 0;
+                margin: 0 -12px;
+                width: calc(100% + 24px);
+            }
+            
+            .invoice-header {
+                padding: 20px !important;
+            }
+            
+            .invoice-table {
+                font-size: 12px;
+            }
+            
+            .invoice-table th, 
+            .invoice-table td {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+            
+            .mobile-text-sm {
+                font-size: 14px;
+            }
+            
+            .mobile-text-base {
+                font-size: 16px;
+            }
+            
+            .mobile-text-lg {
+                font-size: 18px;
+            }
+            
+            .mobile-text-xl {
+                font-size: 20px;
+            }
+            
+            .mobile-padding {
+                padding: 16px !important;
+            }
+            
+            .mobile-stack {
+                display: block !important;
+            }
+            
+            .mobile-stack > div {
+                margin-bottom: 16px;
+            }
+            
+            .mobile-stack > div:last-child {
+                margin-bottom: 0;
+            }
+            
+            .mobile-full-width {
+                width: 100% !important;
+            }
+        }
+        
+        /* iPad specific styles */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .invoice-container {
+                max-width: 90%;
+                margin: 0 auto;
+            }
+            
+            .invoice-table {
+                font-size: 13px;
+            }
+        }
+        
+        /* iPhone notch and home indicator safe areas */
+        @supports(padding: max(0px)) {
+            .safe-area-top {
+                padding-top: max(12px, env(safe-area-inset-top));
+            }
+            
+            .safe-area-bottom {
+                padding-bottom: max(12px, env(safe-area-inset-bottom));
+            }
+            
+            .safe-area-left {
+                padding-left: max(12px, env(safe-area-inset-left));
+            }
+            
+            .safe-area-right {
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+        }
+        
+        /* Touch-friendly buttons */
+        .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Hide scrollbar for mobile */
+        .mobile-scrollable {
+            -webkit-overflow-scrolling: touch;
+        }
+        
         @media print {
-            body { background: white; }
-            .no-print { display: none !important; }
-            .invoice-container { box-shadow: none; margin: 0; max-width: 100%; }
-            .invoice-header { background: #4f46e5 !important; -webkit-print-color-adjust: exact; }
+            body { 
+                background: white; 
+                padding: 0;
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .invoice-container { 
+                box-shadow: none; 
+                margin: 0; 
+                max-width: 100%; 
+                border-radius: 0;
+            }
+            .invoice-header { 
+                background: var(--primary) !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+            .invoice-table th {
+                background: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen antialiased p-4 md:p-8">
+<body class="min-h-screen antialiased safe-area-top safe-area-bottom safe-area-left safe-area-right">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="flex justify-between items-center mb-6 no-print">
+        <div class="flex justify-between items-center mb-4 md:mb-6 no-print">
             <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 flex items-center">
+                <h1 class="mobile-text-lg md:text-2xl lg:text-3xl font-extrabold text-gray-900 flex items-center">
                     <div class="bg-gradient-to-br from-indigo-500 to-blue-500 p-2 rounded-xl mr-3">
-                        <i class="fas fa-home text-white"></i>
+                        <i class="fas fa-home text-white text-sm md:text-base"></i>
                     </div>
-                    <span class="bg-gradient-to-br from-indigo-500 to-blue-500 bg-clip-text text-transparent">Aikya</span> Property Manager
+                    <span class="bg-gradient-to-br from-indigo-500 to-blue-500 bg-clip-text text-transparent">Aikya</span> 
+                    <span class="hidden md:inline">Property Manager</span>
+                    <span class="md:hidden">Invoice</span>
                 </h1>
-                <p class="text-gray-600 mt-1">Professional Invoice Generation</p>
+                <p class="text-gray-600 mt-1 text-xs md:text-sm">Professional Invoice Generation</p>
             </div>
-            <button onclick="window.history.back()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i> Back
+            <button onclick="window.history.back()" class="px-3 md:px-4 py-2 md:py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center touch-target text-sm md:text-base">
+                <i class="fas fa-arrow-left mr-1 md:mr-2"></i> 
+                <span class="hidden md:inline">Back</span>
             </button>
         </div>
 
         <!-- Invoice Container -->
-        <div class="invoice-container rounded-lg overflow-hidden">
+        <div class="invoice-container mobile-scrollable">
             <!-- Invoice Header -->
-            <div class="invoice-header p-6 md:p-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <div class="mb-4 md:mb-0">
-                        <h2 id="company-name" class="text-2xl md:text-3xl font-bold">Aikya Properties</h2>
-                        <p id="company-address" class="text-blue-100 mt-1">Loading...</p>
-                        <p id="company-contact" class="text-blue-100">Loading...</p>
+            <div class="invoice-header p-4 md:p-6 lg:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mobile-stack">
+                    <div class="mb-3 md:mb-0">
+                        <h2 id="company-name" class="mobile-text-xl md:text-2xl lg:text-3xl font-bold">Aikya Properties</h2>
+                        <p id="company-address" class="text-blue-100 mt-1 mobile-text-sm opacity-90"></p>
+                        <p id="company-contact" class="text-blue-100 mobile-text-sm opacity-90"></p>
                     </div>
-                    <div class="text-right">
-                        <h3 class="text-2xl md:text-3xl font-bold">INVOICE</h3>
-                        <p id="invoice-number" class="text-blue-100 mt-1">Loading...</p>
-                        <p id="invoice-date" class="text-blue-100">Date: Loading...</p>
+                    <div class="text-left md:text-right">
+                        <h3 class="mobile-text-xl md:text-2xl lg:text-3xl font-bold">INVOICE</h3>
+                        <p id="invoice-number" class="text-blue-100 mt-1 mobile-text-sm opacity-90"></p>
+                        <p id="invoice-date" class="text-blue-100 mobile-text-sm opacity-90">Date: Loading...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Invoice Body -->
-            <div class="p-6 md:p-8">
+            <div class="p-4 md:p-6 lg:p-8 mobile-padding">
                 <!-- Bill To & Property Details -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8 mb-4 md:mb-6 lg:mb-8 mobile-stack">
                     <div>
-                        <h4 class="font-semibold text-gray-700 mb-3 text-lg">Bill To:</h4>
-                        <p id="guest-name" class="text-gray-800 font-medium">Loading...</p>
-                        <p id="guest-phone" class="text-gray-600">Phone: Loading...</p>
-                        <p id="booking-id" class="text-gray-600">Booking ID: Loading...</p>
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 mobile-text-base md:text-lg">Bill To:</h4>
+                        <p id="guest-name" class="text-gray-800 font-medium mobile-text-sm md:text-base"></p>
+                        <p id="guest-phone" class="text-gray-600 text-xs md:text-sm">Phone: Loading...</p>
+                        <p id="booking-id" class="text-gray-600 text-xs md:text-sm">Booking ID: Loading...</p>
                     </div>
                     <div>
-                        <h4 class="font-semibold text-gray-700 mb-3 text-lg">Property Details:</h4>
-                        <p id="property-name" class="text-gray-800 font-medium">Loading...</p>
-                        <p id="stay-dates" class="text-gray-600">Dates: Loading...</p>
-                        <p id="nights-count" class="text-gray-600">Nights: Loading...</p>
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 mobile-text-base md:text-lg">Property Details:</h4>
+                        <p id="property-name" class="text-gray-800 font-medium mobile-text-sm md:text-base"></p>
+                        <p id="stay-dates" class="text-gray-600 text-xs md:text-sm">Dates: Loading...</p>
+                        <p id="nights-count" class="text-gray-600 text-xs md:text-sm">Nights: Loading...</p>
                     </div>
                 </div>
 
                 <!-- Invoice Items Table -->
-                <div class="mb-6 md:mb-8">
-                    <table class="invoice-table">
+                <div class="mb-4 md:mb-6 lg:mb-8 overflow-x-auto mobile-scrollable">
+                    <table class="invoice-table min-w-full">
                         <thead>
                             <tr>
-                                <th>Description</th>
-                                <th>Quantity</th>
-                                <th>Rate (₹)</th>
-                                <th>Amount (₹)</th>
+                                <th class="whitespace-nowrap">Description</th>
+                                <th class="whitespace-nowrap">Qty</th>
+                                <th class="whitespace-nowrap">Rate (₹)</th>
+                                <th class="whitespace-nowrap">Amount (₹)</th>
                             </tr>
                         </thead>
                         <tbody id="invoice-items">
-                            <tr><td colspan="4" class="text-center text-gray-500">Loading invoice items...</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center text-gray-500 py-4 text-sm md:text-base">
+                                    Loading invoice items...
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Totals -->
                 <div class="flex justify-end">
-                    <div class="w-full md:w-1/2">
+                    <div class="w-full md:w-1/2 mobile-full-width">
                         <table class="invoice-table">
                             <tbody>
                                 <tr>
-                                    <td class="font-semibold">Subtotal</td>
-                                    <td id="subtotal-amount" class="text-right">₹0.00</td>
+                                    <td class="font-semibold whitespace-nowrap text-sm md:text-base">Subtotal</td>
+                                    <td id="subtotal-amount" class="text-right whitespace-nowrap text-sm md:text-base">₹0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-semibold">GST on Stay (<span id="gst-stay-percent">5</span>%)</td>
-                                    <td id="gst-stay-amount" class="text-right">₹0.00</td>
+                                    <td class="font-semibold whitespace-nowrap text-sm md:text-base">GST on Stay (<span id="gst-stay-percent">5</span>%)</td>
+                                    <td id="gst-stay-amount" class="text-right whitespace-nowrap text-sm md:text-base">₹0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-semibold">GST on Service (<span id="gst-service-percent">18</span>%)</td>
-                                    <td id="gst-service-amount" class="text-right">₹0.00</td>
+                                    <td class="font-semibold whitespace-nowrap text-sm md:text-base">GST on Service (<span id="gst-service-percent">18</span>%)</td>
+                                    <td id="gst-service-amount" class="text-right whitespace-nowrap text-sm md:text-base">₹0.00</td>
                                 </tr>
                                 <tr class="total-row">
-                                    <td class="font-bold text-lg">Total Amount</td>
-                                    <td id="total-amount" class="text-right font-bold text-lg">₹0.00</td>
+                                    <td class="font-bold whitespace-nowrap mobile-text-base md:text-lg">Total Amount</td>
+                                    <td id="total-amount" class="text-right font-bold whitespace-nowrap mobile-text-base md:text-lg">₹0.00</td>
                                 </tr>
                                 <tr class="total-row">
-                                    <td class="font-bold text-lg">Amount Paid</td>
-                                    <td id="amount-paid-display" class="text-right font-bold text-lg text-green-600">₹0.00</td>
+                                    <td class="font-bold whitespace-nowrap mobile-text-base md:text-lg">Amount Paid</td>
+                                    <td id="amount-paid-display" class="text-right font-bold whitespace-nowrap mobile-text-base md:text-lg text-green-600">₹0.00</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -127,33 +303,33 @@
                 </div>
 
                 <!-- Payment Details -->
-                <div class="mt-8 p-4 bg-gray-50 rounded-lg">
-                    <h4 class="font-semibold text-gray-700 mb-2">Payment Details:</h4>
-                    <p class="text-gray-600">Amount Paid: <span id="amount-paid" class="font-semibold">₹0.00</span></p>
-                    <p class="text-gray-600">Payment Status: <span id="payment-status" class="font-semibold text-green-600">Paid</span></p>
-                    <p class="text-gray-600 text-sm mt-2">Payment received via <span id="payment-source">Direct</span></p>
+                <div class="mt-6 md:mt-8 p-3 md:p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2 mobile-text-base md:text-lg">Payment Details:</h4>
+                    <p class="text-gray-600 text-sm md:text-base">Amount Paid: <span id="amount-paid" class="font-semibold">₹0.00</span></p>
+                    <p class="text-gray-600 text-sm md:text-base">Payment Status: <span id="payment-status" class="font-semibold text-green-600">Paid</span></p>
+                    <p class="text-gray-600 text-xs md:text-sm mt-2">Payment received via <span id="payment-source">Direct</span></p>
                 </div>
 
                 <!-- Footer -->
-                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
-                    <p class="text-gray-600">Thank you for choosing Aikya Properties!</p>
-                    <p class="text-gray-500 text-sm mt-2" id="company-contact-footer">For any queries, please contact us</p>
+                <div class="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-200 text-center">
+                    <p class="text-gray-600 text-sm md:text-base">Thank you for choosing <span id="footer-company-name">Aikya Properties</span>!</p>
+                    <p class="text-gray-500 text-xs md:text-sm mt-2" id="company-contact-footer">For any queries, please contact us</p>
                 </div>
             </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-center gap-4 mt-8 no-print">
-            <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+        <div class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mt-6 md:mt-8 no-print">
+            <button onclick="window.print()" class="btn-primary px-4 md:px-6 py-3 text-white rounded-lg transition flex items-center justify-center touch-target text-sm md:text-base order-2 sm:order-1">
                 <i class="fas fa-print mr-2"></i> Print Invoice
             </button>
-            <button onclick="downloadPDF()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center">
-                <i class="fas fa-download mr-2"></i> Download PDF
+            <button onclick="saveAsImage()" class="btn-success px-4 md:px-6 py-3 text-white rounded-lg transition flex items-center justify-center touch-target text-sm md:text-base order-1 sm:order-2">
+                <i class="fas fa-image mr-2"></i> Save as Image
             </button>
         </div>
 
         <!-- Status Message -->
-        <div id="status-message" class="mt-4 text-center"></div>
+        <div id="status-message" class="mt-4 text-center text-sm md:text-base"></div>
     </div>
 
     <script>
@@ -165,57 +341,69 @@
         let invoiceConfig = {};
         let currentBooking = null;
 
-        // Load invoice configuration from Supabase
-async function loadInvoiceConfig() {
-    try {
-        const { data, error } = await supabase
-            .from('invoice_config')
-            .select('*')
-            .eq('id', 'main')
-            .single();
+        // Add button styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-primary {
+                background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+            }
+            .btn-primary:hover {
+                background: linear-gradient(135deg, #4338ca 0%, #0284c7 100%);
+            }
+            .btn-success {
+                background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+            }
+            .btn-success:hover {
+                background: linear-gradient(135deg, #0da271 0%, #16a34a 100%);
+            }
+        `;
+        document.head.appendChild(style);
 
-        if (!error && data) {
-            // Use the GST rates from database, but keep company info as defaults
-            invoiceConfig = {
-                ...data,
-                company_name: 'Aikya Properties',
-                company_phone: '+91 98765 43210',
-                company_address: '123 Property Street, Bangalore, Karnataka - 560001',
-                company_email: 'info@aikyaproperties.com',
-                company_website: 'www.aikyaproperties.com'
-            };
-            console.log("Invoice config loaded:", invoiceConfig);
-            return true;
-        } else {
-            console.error('Error loading invoice config:', error);
-            // Set defaults
-            invoiceConfig = {
-                company_name: 'Aikya Properties',
-                company_phone: '+91 98765 43210',
-                company_address: '123 Property Street, Bangalore, Karnataka - 560001',
-                company_email: 'info@aikyaproperties.com',
-                company_website: 'www.aikyaproperties.com',
-                room_gst_rate: 5,
-                service_gst_rate: 18
-            };
-            return false;
+        // Load invoice configuration from Supabase
+        async function loadInvoiceConfig() {
+            try {
+                const { data, error } = await supabase
+                    .from('invoice_config')
+                    .select('*')
+                    .eq('id', 'main')
+                    .single();
+
+                if (!error && data) {
+                    // Use ALL data from database including company information
+                    invoiceConfig = data;
+                    console.log("Invoice config loaded from Supabase:", invoiceConfig);
+                    return true;
+                } else {
+                    console.error('Error loading invoice config:', error);
+                    // Set defaults
+                    invoiceConfig = {
+                        company_name: 'Aikya Properties',
+                        company_phone: '+91 98765 43210',
+                        company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                        company_email: 'info@aikyaproperties.com',
+                        company_website: 'www.aikyaproperties.com',
+                        room_gst_rate: 5,
+                        service_gst_rate: 18,
+                        service_charge: 0
+                    };
+                    return false;
+                }
+            } catch (e) {
+                console.error('Error loading invoice config:', e);
+                // Set defaults even on error
+                invoiceConfig = {
+                    company_name: 'Aikya Properties',
+                    company_phone: '+91 98765 43210',
+                    company_address: '123 Property Street, Bangalore, Karnataka - 560001',
+                    company_email: 'info@aikyaproperties.com',
+                    company_website: 'www.aikyaproperties.com',
+                    room_gst_rate: 5,
+                    service_gst_rate: 18,
+                    service_charge: 0
+                };
+                return false;
+            }
         }
-    } catch (e) {
-        console.error('Error loading invoice config:', e);
-        // Set defaults even on error
-        invoiceConfig = {
-            company_name: 'Aikya Properties',
-            company_phone: '+91 98765 43210',
-            company_address: '123 Property Street, Bangalore, Karnataka - 560001',
-            company_email: 'info@aikyaproperties.com',
-            company_website: 'www.aikyaproperties.com',
-            room_gst_rate: 5,
-            service_gst_rate: 18
-        };
-        return false;
-    }
-}
-        
 
         // Find booking by ID in Supabase
         async function findBooking(bookingId) {
@@ -277,34 +465,33 @@ async function loadInvoiceConfig() {
             return `INV-${year}${month}${day}-${random}`;
         }
 
-        // Calculate invoice amounts - FIXED VERSION
-// Calculate invoice amounts - CORRECTED VERSION
+        // Calculate invoice amounts
         function calculateInvoiceAmounts(booking, nights) {
             const totalAmount = parseFloat(booking.amount_paid);
             
-            // Fixed service charge (configurable - currently ₹500)
-            const fixedServiceCharge = 500;
+            // Get service charge from config (default to 0 if not set)
+            const serviceCharge = parseFloat(invoiceConfig.service_charge) || 0;
             
-            // Calculate stay charges (total amount minus fixed service charge)
-            const stayCharges = totalAmount - fixedServiceCharge;
+            // Calculate stay charges (total amount minus service charge)
+            const stayCharges = totalAmount - serviceCharge;
             
             // Get GST rates with fallbacks
-            const roomGstRate = invoiceConfig.room_gst_rate || 5;
-            const serviceGstRate = invoiceConfig.service_gst_rate || 18;
+            const roomGstRate = parseFloat(invoiceConfig.room_gst_rate) || 5;
+            const serviceGstRate = parseFloat(invoiceConfig.service_gst_rate) || 18;
             
             // Calculate GST
             const gstStay = Math.round(stayCharges * (roomGstRate / 100));
-            const gstService = Math.round(fixedServiceCharge * (serviceGstRate / 100));
+            const gstService = Math.round(serviceCharge * (serviceGstRate / 100));
             
             // Calculate per night rate
             const perNightRate = Math.round(stayCharges / nights);
             
-            const subtotal = stayCharges + fixedServiceCharge;
+            const subtotal = stayCharges + serviceCharge;
             const totalWithGST = subtotal + gstStay + gstService;
             
             return {
                 stayCharges,
-                serviceCharges: fixedServiceCharge,
+                serviceCharges: serviceCharge,
                 gstStay,
                 gstService,
                 perNightRate,
@@ -316,20 +503,21 @@ async function loadInvoiceConfig() {
             };
         }
 
-        // Render invoice - FIXED VERSION
+        // Render invoice
         function renderInvoice() {
             if (!currentBooking) {
                 showStatus('Booking not found!', 'error');
                 return;
             }
 
-            // Update company information
+            // Update company information from Supabase config
             document.getElementById('company-name').textContent = invoiceConfig.company_name || 'Aikya Properties';
-            document.getElementById('company-address').textContent = invoiceConfig.company_address || 'Loading...';
+            document.getElementById('company-address').textContent = invoiceConfig.company_address || '123 Property Street, Bangalore, Karnataka - 560001';
             document.getElementById('company-contact').textContent = 
-                `Phone: ${invoiceConfig.company_phone || 'Loading...'} | Email: ${invoiceConfig.company_email || 'Loading...'}`;
+                `Phone: ${invoiceConfig.company_phone || '+91 98765 43210'} | Email: ${invoiceConfig.company_email || 'info@aikyaproperties.com'}`;
             document.getElementById('company-contact-footer').textContent = 
-                `For any queries, please contact us at ${invoiceConfig.company_phone || ''} or ${invoiceConfig.company_email || ''}`;
+                `For any queries, please contact us at ${invoiceConfig.company_phone || '+91 98765 43210'} or ${invoiceConfig.company_email || 'info@aikyaproperties.com'}`;
+            document.getElementById('footer-company-name').textContent = invoiceConfig.company_name || 'Aikya Properties';
 
             // Update invoice header
             const invoiceNumber = generateInvoiceNumber(currentBooking.id);
@@ -349,38 +537,89 @@ async function loadInvoiceConfig() {
                 `Dates: ${formatDate(currentBooking.check_in_date)} to ${formatDate(currentBooking.check_out_date)}`;
             document.getElementById('nights-count').textContent = `Nights: ${nights}`;
 
-             // Calculate amounts
-             const amounts = calculateInvoiceAmounts(currentBooking, nights);
+            // Calculate amounts
+            const amounts = calculateInvoiceAmounts(currentBooking, nights);
 
-// Update invoice items
-const itemsContainer = document.getElementById('invoice-items');
-itemsContainer.innerHTML = `
-    <tr>
-        <td>Stay Charges (${nights} nights)</td>
-        <td>${nights}</td>
-        <td>₹${amounts.perNightRate.toFixed(2)}</td>
-        <td>₹${amounts.stayCharges.toFixed(2)}</td>
-    </tr>
-    <tr>
-        <td>Service Charges (One-time)</td>
-        <td>1</td>
-        <td>₹${amounts.serviceCharges.toFixed(2)}</td>
-        <td>₹${amounts.serviceCharges.toFixed(2)}</td>
-    </tr>
-`;
+            // Update invoice items
+            const itemsContainer = document.getElementById('invoice-items');
+            itemsContainer.innerHTML = `
+                <tr>
+                    <td class="whitespace-nowrap">Stay Charges (${nights} nights)</td>
+                    <td class="whitespace-nowrap">${nights}</td>
+                    <td class="whitespace-nowrap">₹${amounts.perNightRate.toFixed(2)}</td>
+                    <td class="whitespace-nowrap">₹${amounts.stayCharges.toFixed(2)}</td>
+                </tr>
+            `;
 
-// Update totals - REMOVED the duplicate 'const amounts' declaration
-document.getElementById('gst-stay-percent').textContent = amounts.roomGstRate;
-document.getElementById('gst-service-percent').textContent = amounts.serviceGstRate;
-document.getElementById('subtotal-amount').textContent = `₹${amounts.subtotal.toFixed(2)}`;
-document.getElementById('gst-stay-amount').textContent = `₹${amounts.gstStay.toFixed(2)}`;
-document.getElementById('gst-service-amount').textContent = `₹${amounts.gstService.toFixed(2)}`;
-document.getElementById('total-amount').textContent = `₹${amounts.totalWithGST.toFixed(2)}`;
-document.getElementById('amount-paid-display').textContent = `₹${amounts.totalAmount.toFixed(2)}`;
+            // Add service charge row only if service charge is greater than 0
+            if (amounts.serviceCharges > 0) {
+                itemsContainer.innerHTML += `
+                    <tr>
+                        <td class="whitespace-nowrap">Service Charges (One-time)</td>
+                        <td class="whitespace-nowrap">1</td>
+                        <td class="whitespace-nowrap">₹${amounts.serviceCharges.toFixed(2)}</td>
+                        <td class="whitespace-nowrap">₹${amounts.serviceCharges.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+
+            // Update totals
+            document.getElementById('gst-stay-percent').textContent = amounts.roomGstRate;
+            document.getElementById('gst-service-percent').textContent = amounts.serviceGstRate;
+            document.getElementById('subtotal-amount').textContent = `₹${amounts.subtotal.toFixed(2)}`;
+            document.getElementById('gst-stay-amount').textContent = `₹${amounts.gstStay.toFixed(2)}`;
+            document.getElementById('gst-service-amount').textContent = `₹${amounts.gstService.toFixed(2)}`;
+            document.getElementById('total-amount').textContent = `₹${amounts.totalWithGST.toFixed(2)}`;
+            document.getElementById('amount-paid-display').textContent = `₹${amounts.totalAmount.toFixed(2)}`;
 
             // Update payment details
             document.getElementById('amount-paid').textContent = `₹${parseFloat(currentBooking.amount_paid).toFixed(2)}`;
             document.getElementById('payment-source').textContent = currentBooking.source;
+        }
+
+        // Save as Image function
+        async function saveAsImage() {
+            showStatus('Preparing image...', 'info');
+            
+            try {
+                const invoiceContainer = document.querySelector('.invoice-container');
+                
+                // Show loading state
+                const originalContent = invoiceContainer.innerHTML;
+                invoiceContainer.innerHTML = `
+                    <div class="flex items-center justify-center p-8">
+                        <div class="text-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <p class="text-gray-600">Generating image...</p>
+                        </div>
+                    </div>
+                `;
+
+                // Use html2canvas to capture the invoice
+                const canvas = await html2canvas(invoiceContainer, {
+                    scale: 2, // Higher quality
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                // Restore original content
+                invoiceContainer.innerHTML = originalContent;
+
+                // Convert canvas to image and download
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `invoice-${currentBooking.id}.png`;
+                link.href = image;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showStatus('Image saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving image:', error);
+                showStatus('Failed to save image. Please try again.', 'error');
+            }
         }
 
         // Show status message
@@ -397,24 +636,6 @@ document.getElementById('amount-paid-display').textContent = `₹${amounts.total
             }
         }
 
-        // Download PDF (simulated)
-        function downloadPDF() {
-            showStatus('Preparing PDF download...', 'info');
-            
-            // Simulate PDF download
-            setTimeout(() => {
-                showStatus('PDF download started!', 'success');
-                
-                // Create a temporary link to trigger download
-                const link = document.createElement('a');
-                link.href = '#';
-                link.download = `invoice-${currentBooking.id}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }, 1500);
-        }
-
         // Get URL parameter
         function getUrlParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -425,8 +646,11 @@ document.getElementById('amount-paid-display').textContent = `₹${amounts.total
         async function initInvoicePage() {
             showStatus('Loading invoice data...', 'info');
             
-            // Load invoice configuration
-            await loadInvoiceConfig();
+            // Load invoice configuration FIRST
+            const configLoaded = await loadInvoiceConfig();
+            if (!configLoaded) {
+                showStatus('Using default invoice configuration', 'info');
+            }
             
             const bookingId = getUrlParameter('bookingId');
             if (!bookingId) {
