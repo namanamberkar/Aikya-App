@@ -1967,7 +1967,7 @@
             document.getElementById('checkOutDate').value = dmyToHtmlDate(selectedEndDate);
             switchTab('booking');
             refreshPropertySelection();
-            showMessage('Dates applied to booking form!', 'success');
+            showMessage(`Property pre-selected. Fill guest details.`, 'info');
         }
 
         window.changeMonth = function(delta) {
@@ -2831,6 +2831,20 @@
                     }
                 }
             );
+        }
+
+        // --- INVOICE GENERATION FUNCTION ---
+        window.generateInvoice = function(bookingId) {
+            // Switch to invoice configuration tab
+            switchTab('invoice-config');
+            
+            // Show message about the booking
+            const booking = bookings.find(b => b.id === bookingId);
+            if (booking) {
+                showMessage(`Invoice generation for booking ${bookingId}. Configure invoice settings and use the Generate Invoice button.`, 'info');
+            } else {
+                showMessage(`Booking ${bookingId} not found.`, 'error');
+            }
         }
 
         // --- INITIALIZATION ---
