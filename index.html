@@ -1227,11 +1227,12 @@
 
     <script>
         // --- SUPABASE CONFIGURATION ---
-        const SUPABASE_URL = 'https://fiqlikvsoqqlcbbtsmwl.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWxpa3Zzb3FxbGNiYnRzbXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0OTY5NTgsImV4cCI6MjA3ODA3Mjk1OH0.ESMTiXRhIYnsMJ34XYESHrTyt-U1YtIENXWCDCwWleM';
+const SUPABASE_URL = 'https://fiqlikvsoqqlcbbtsmwl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWxpa3Zzb3FxbGNiYnRzbXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0OTY5NTgsImV4cCI6MjA3ODA3Mjk1OH0.ESMTiXRhIYnsMJ34XYESHrTyt-U1YtIENXWCDCwWleM'; 
 
-        // Initialize Supabase client
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Initialize Supabase client - FIXED: Removed 'const' to prevent redeclaration error
+supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- DATA STORAGE ---
         let properties = [];
